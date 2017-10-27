@@ -1,4 +1,5 @@
 import javax.swing.*;
+import java.awt.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -14,8 +15,17 @@ public class Server extends JFrame  {
     //private Vector<Client> clients=new Vector<>();
     //private static ServerSocket serverSocket;
     public static  int fileLength;
+    public static JProgressBar progressBar;
 
-
+    public Server(int min,int max)
+    {
+        progressBar=new JProgressBar(min,max);
+        progressBar.setStringPainted(true);
+        progressBar.setValue(0);
+        setSize(new Dimension(500,100));
+        add(progressBar);
+        setVisible(true);
+    }
 
     public static void main(String[] args)
     {
@@ -30,24 +40,23 @@ public class Server extends JFrame  {
         {
             try {
                 Socket socket = serverSocket.accept();
-                //InputStream input=new ObjectInputStream(socket.getInputStream());
                 InputStream inputS=socket.getInputStream();
                 BufferedInputStream input=new BufferedInputStream(inputS);
-                //BufferedInputStream input=new BufferedInputStream(socket.getInputStream());
                 PrintWriter out=new PrintWriter(socket.getOutputStream(),true);
                 out.println("Nawiązano połączenie!");
                 BufferedReader reader=new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 fileLength=Integer.parseInt(reader.readLine());
+                Server server=new Server(0,fileLength);
                 byte[] fileBytes=new byte[fileLength];
                 int offset=0;
-                int read=0;
+                int read;
                 while(offset<fileLength && (read=input.read(fileBytes,offset,fileLength-offset))!=EOF)
                 {
                     offset+=read;
+                    progressBar.setValue(offset);
                 }
-                //int bytesRead=input.read(fileBytes,0,fileLength);
-                System.out.println("Wczytano bajtów: "+read+" a miało być: "+fileLength);
-                File fileOut=new File("C:\\Users\\Mateusz\\Desktop\\kopia.iso");
+                System.out.println("Wczytano bajtów: "+offset+"/"+fileLength);
+                File fileOut=new File("C:\\Users\\Mateusz\\Desktop\\kopia.mp4");
                 FileOutputStream outputLocal=new FileOutputStream(fileOut);
                 outputLocal.write(fileBytes,0,fileLength);
                 outputLocal.flush();

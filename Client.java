@@ -31,15 +31,13 @@ public class Client extends JFrame implements ActionListener{
     {
         //new Client();
         try {
-            //int fileLength=Server.fileLength;
             Socket socket = new Socket("localhost", 12129);
             InputStream inputStream=socket.getInputStream();
             PrintWriter outNotify=new PrintWriter(socket.getOutputStream(),true);
             BufferedReader bufferedReader=new BufferedReader(new InputStreamReader(inputStream));
             System.out.println(bufferedReader.readLine());
-            //OutputStream outputGlobal=new ObjectOutputStream(socket.getOutputStream());
             OutputStream out=socket.getOutputStream();
-            File file=new File("E:\\xubuntu-14.04.4-desktop-i386.iso");
+            File file=new File("E:\\Filmy\\Ghost In The Shell (2017) [1080p] [YTS.AG]\\Ghost.In.The.Shell.2017.1080p.BluRay.x264-[YTS.AG].mp4");
             int fileLength=(int)file.length();
             outNotify.println(fileLength);
             FileInputStream inputLocal=new FileInputStream(file);
