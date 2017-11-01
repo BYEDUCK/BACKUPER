@@ -20,7 +20,7 @@ public class Client extends JFrame implements ActionListener{
     private FileInputStream fis;
     private BufferedInputStream inputLocal;
     private OutputStream outputGlobal;
-    private Socket socket=null;
+    private  Socket socket=null;
 
     public Client()
     {
@@ -29,15 +29,15 @@ public class Client extends JFrame implements ActionListener{
 
     public static void main(String[] args)
     {
-        //new Client();
-        try {
-            Socket socket = new Socket("localhost", 12129);
+        new Client();
+        /*try {
+            socket = new Socket("localhost", 12129);
             InputStream inputStream=socket.getInputStream();
             PrintWriter outNotify=new PrintWriter(socket.getOutputStream(),true);
             BufferedReader bufferedReader=new BufferedReader(new InputStreamReader(inputStream));
             System.out.println(bufferedReader.readLine());
             OutputStream out=socket.getOutputStream();
-            File file=new File("E:\\Filmy\\Ghost In The Shell (2017) [1080p] [YTS.AG]\\Ghost.In.The.Shell.2017.1080p.BluRay.x264-[YTS.AG].mp4");
+            File file=new File("E:\\elektr\\Podręczniki.zip");
             int fileLength=(int)file.length();
             outNotify.println(fileLength);
             FileInputStream inputLocal=new FileInputStream(file);
@@ -50,9 +50,49 @@ public class Client extends JFrame implements ActionListener{
         }
         catch (Exception e){
             System.err.println(e);
-        }
+        }*/
     }
 
+
+    private void sendFile(String filePath){
+        try {
+            socket = new Socket("localhost", 12129);
+            InputStream inputStream=socket.getInputStream();
+            PrintWriter outNotify=new PrintWriter(socket.getOutputStream(),true);
+            BufferedReader bufferedReader=new BufferedReader(new InputStreamReader(inputStream));
+            System.out.println(bufferedReader.readLine());
+            OutputStream out=socket.getOutputStream();
+
+
+            char tmp;
+            int i=0;
+            String fileName_tmp="";
+            int file_src_length=filePath.length();
+            while((tmp=filePath.charAt(file_src_length-1-i))!='\\')
+            {
+                fileName_tmp+=tmp;
+                i++;
+            }
+            StringBuilder builder=new StringBuilder(fileName_tmp);
+            String fileName=builder.reverse().toString();
+
+
+            File file=new File(filePath);
+            int fileLength=(int)file.length();
+            outNotify.println(fileLength);
+            outNotify.println(fileName);
+            FileInputStream inputLocal=new FileInputStream(file);
+            byte[] bytesFile=new byte[fileLength];
+            inputLocal.read(bytesFile,0,fileLength);
+            out.write(bytesFile,0,fileLength);
+            out.flush();
+            System.out.println(bufferedReader.readLine());
+            socket.close();
+        }
+        catch (Exception e){
+            System.err.println(e);
+        }
+    }
 
 
 
@@ -95,40 +135,8 @@ public class Client extends JFrame implements ActionListener{
         }
         else if(clicked==startBuckup)
         {
-
+            sendFile(chosenName);
         }
     }
 
-    private boolean Buckup(String file_src)
-    {
-        char tmp;
-        int i=0;
-        String fileName_tmp="";
-        int file_src_length=file_src.length();
-        while((tmp=file_src.charAt(file_src_length-1-i))!='\\')
-        {
-            fileName_tmp+=tmp;
-            i++;
-        }
-        StringBuilder builder=new StringBuilder(fileName_tmp);
-        String fileName=builder.reverse().toString();
-        File file= new File(file_src);
-        if(file.exists())
-        {
-            try {
-                fis = new FileInputStream(file);
-                inputLocal=new BufferedInputStream(fis);
-                int fileLength=(int)file.length();
-                byte[] bytesInput=new byte[fileLength];
-                inputLocal.read(bytesInput,0,fileLength);
-                outputGlobal=new ObjectOutputStream(socket.getOutputStream());
-                outputGlobal.write(bytesInput,0,fileLength);
-            }catch (IOException e){
-                System.err.println("Cannot open source file");
-                return false;
-            }
-            return true;
-        }
-        else return false;
-    }
 }

@@ -14,8 +14,9 @@ public class Server extends JFrame  {
     //private Properties properties;
     //private Vector<Client> clients=new Vector<>();
     //private static ServerSocket serverSocket;
-    public static  int fileLength;
-    public static JProgressBar progressBar;
+    private static  int fileLength;
+    private static String fileName;
+    private static JProgressBar progressBar;
 
     public Server(int min,int max)
     {
@@ -45,7 +46,9 @@ public class Server extends JFrame  {
                 PrintWriter out=new PrintWriter(socket.getOutputStream(),true);
                 out.println("Nawiązano połączenie!");
                 BufferedReader reader=new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                //ProgressMonitorInputStream input=new ProgressMonitorInputStream(null,"Reading...",Binput);
                 fileLength=Integer.parseInt(reader.readLine());
+                fileName=reader.readLine();
                 Server server=new Server(0,fileLength);
                 byte[] fileBytes=new byte[fileLength];
                 int offset=0;
@@ -56,7 +59,7 @@ public class Server extends JFrame  {
                     progressBar.setValue(offset);
                 }
                 System.out.println("Wczytano bajtów: "+offset+"/"+fileLength);
-                File fileOut=new File("C:\\Users\\Mateusz\\Desktop\\kopia.mp4");
+                File fileOut=new File("C:\\kopia-"+fileName);
                 FileOutputStream outputLocal=new FileOutputStream(fileOut);
                 outputLocal.write(fileBytes,0,fileLength);
                 outputLocal.flush();
