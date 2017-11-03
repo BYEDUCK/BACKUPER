@@ -3,21 +3,19 @@ import java.awt.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Properties;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import static sun.nio.ch.IOStatus.EOF;
-//import java.io.EOFException;
 
 public class Server extends JFrame  {
 
-    //private Properties properties;
-    //private Vector<Client> clients=new Vector<>();
-    //private static ServerSocket serverSocket;
     private static  int fileLength;
-    private static String fileName;
+    private static String filePath;
     private static JProgressBar progressBar;
     private static int howmany;
+    private static ArrayList<FileMetaData> filesData;
+    public static final String ready="READY";
+    public static final String end="END";
 
     public Server(int min,int max)
     {
@@ -42,18 +40,22 @@ public class Server extends JFrame  {
         {
             try {
                 Socket socket = serverSocket.accept();
+                filesData=new ArrayList<>();
                 InputStream inputS=socket.getInputStream();
                 BufferedInputStream input=new BufferedInputStream(inputS);
-                //PrintWriter out=new PrintWriter(socket.getOutputStream(),true);
-                //out.println("Nawiązano połączenie!");
-                //ProgressMonitorInputStream input=new ProgressMonitorInputStream(null,"Reading...",Binput);
+                PrintWriter out=new PrintWriter(socket.getOutputStream(),true);              
                 BufferedReader reader=new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 howmany=Integer.parseInt(reader.readLine());
-                for(int i=0;i<howmany;i++) {
-                    reader=new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                    fileLength = Integer.parseInt(reader.readLine());
-                    fileName = reader.readLine();
-                    //Server server = new Server(0, fileLength);
+                for(int i=0;i<howmany;i++){
+                    int fileLngth=Integer.parseInt(reader.readLine());
+                    String fileNm=reader.readLine();
+                    filesData.add(new FileMetaData("E:\\copied\\"+fileNm,fileLngth));
+                }
+                out.println(ready);
+                System.out.println(ready);
+                for(int i=0;i<howmany;i++) {                  
+                    fileLength = filesData.get(i).getFileLength();
+                    filePath = filesData.get(i).getFilePath();
                     byte[] fileBytes = new byte[fileLength];
                     Server server = new Server(0, fileLength);
                     int offset = 0;
@@ -63,12 +65,15 @@ public class Server extends JFrame  {
                         progressBar.setValue(offset);
                     }
                     System.out.println("Wczytano bajtów: " + offset + "/" + fileLength);
-                    File fileOut = new File("E:\\copied\\kopia-" + fileName);
+                    File fileOut = new File(filePath);
                     FileOutputStream outputLocal = new FileOutputStream(fileOut);
                     outputLocal.write(fileBytes, 0, fileLength);
                     outputLocal.flush();
-                    //out.println("Pobrano plik i utworzono kopie!");
+                    out.println(ready);
+                    System.out.println(ready);
+                    
                 }
+                out.println(end);
                 socket.close();
             }
             catch (IOException e){
