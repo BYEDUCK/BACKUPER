@@ -6,9 +6,13 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import static sun.nio.ch.IOStatus.EOF;
+//import java.io.EOFException;
 
 public class Server extends JFrame  {
 
+    //private Properties properties;
+    //private Vector<Client> clients=new Vector<>();
+    //private static ServerSocket serverSocket;
     private static  int fileLength;
     private static String filePath;
     private static JProgressBar progressBar;
@@ -17,11 +21,10 @@ public class Server extends JFrame  {
     public static final String ready="READY";
     public static final String end="END";
 
-    public Server(int min,int max)
+    public Server()
     {
-        progressBar=new JProgressBar(min,max);
-        progressBar.setStringPainted(true);
-        progressBar.setValue(0);
+        progressBar=new JProgressBar();
+        progressBar.setStringPainted(true);;
         setSize(new Dimension(500,100));
         add(progressBar);
         setVisible(true);
@@ -43,21 +46,25 @@ public class Server extends JFrame  {
                 filesData=new ArrayList<>();
                 InputStream inputS=socket.getInputStream();
                 BufferedInputStream input=new BufferedInputStream(inputS);
-                PrintWriter out=new PrintWriter(socket.getOutputStream(),true);              
+                PrintWriter out=new PrintWriter(socket.getOutputStream(),true);
                 BufferedReader reader=new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 howmany=Integer.parseInt(reader.readLine());
                 for(int i=0;i<howmany;i++){
                     int fileLngth=Integer.parseInt(reader.readLine());
                     String fileNm=reader.readLine();
-                    filesData.add(new FileMetaData("E:\\copied\\"+fileNm,fileLngth));
+                    filesData.add(new FileMetaData("E:\\copied\\kopia-"+fileNm,fileLngth));
                 }
                 out.println(ready);
                 System.out.println(ready);
-                for(int i=0;i<howmany;i++) {                  
+                new Server();
+                for(int i=0;i<howmany;i++) {
+                    //reader=new BufferedReader(new InputStreamReader(socket.getInputStream()));
                     fileLength = filesData.get(i).getFileLength();
                     filePath = filesData.get(i).getFilePath();
+                    progressBar.setMinimum(0);
+                    progressBar.setMaximum(fileLength);
+                    progressBar.setValue(0);
                     byte[] fileBytes = new byte[fileLength];
-                    Server server = new Server(0, fileLength);
                     int offset = 0;
                     int read;
                     while (offset < fileLength && (read = input.read(fileBytes, offset, fileLength - offset)) != EOF) {
@@ -71,7 +78,6 @@ public class Server extends JFrame  {
                     outputLocal.flush();
                     out.println(ready);
                     System.out.println(ready);
-                    
                 }
                 out.println(end);
                 socket.close();

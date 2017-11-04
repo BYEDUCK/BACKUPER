@@ -12,17 +12,18 @@ import java.util.ArrayList;
 
 public class Client extends JFrame implements ActionListener{
 
+
     private JButton chooseFile;
     private JButton startBuckup;
     private JButton endButton;
     private JFileChooser fileChooser;
     private JLabel chosenNameLabel;
-    private String chosenName;
     private JList fileQue;
     private DefaultListModel listModel;
     private ArrayList<FileMetaData> que;
     private PrintWriter outNotify;
     private BufferedReader bufferedReader;
+    private static int curiosity=0;
     private  Socket socket=null;
 
     public Client()
@@ -77,8 +78,9 @@ public class Client extends JFrame implements ActionListener{
 
     private void sendFile(FileMetaData fileData,OutputStream out){
         try {
+
             File file = new File(fileData.getFilePath());
-            int fileLength = fileData.getFileLength();    
+            int fileLength = fileData.getFileLength();
             FileInputStream inputLocal = new FileInputStream(file);
             byte[] bytesFile = new byte[fileLength];
             inputLocal.read(bytesFile, 0, fileLength);
@@ -97,6 +99,7 @@ public class Client extends JFrame implements ActionListener{
         startBuckup=new JButton("Rozpocznij przesyłanie");
         endButton=new JButton("END");
         fileChooser=new JFileChooser();
+        fileChooser.setMultiSelectionEnabled(true);
         chosenNameLabel =new JLabel("Wybrany plik");
         listModel=new DefaultListModel();
         fileQue=new JList(listModel);
@@ -110,6 +113,7 @@ public class Client extends JFrame implements ActionListener{
         contentFrame.add(chosenNameLabel,BorderLayout.SOUTH);
         contentFrame.add(fileQue,BorderLayout.CENTER);
         contentFrame.add(endButton,BorderLayout.EAST);
+        //contentFrame.add(dirOutTextArea,BorderLayout.NORTH);
         contentFrame.add(chooseFile,BorderLayout.NORTH);
         contentFrame.add(startBuckup,BorderLayout.WEST);
         setSize(new Dimension(800,200));
@@ -129,14 +133,17 @@ public class Client extends JFrame implements ActionListener{
         Object clicked=e.getSource();
         if(clicked==chooseFile)
         {
-            if(fileChooser.showOpenDialog(chooseFile)==JFileChooser.APPROVE_OPTION){}
-            chosenName=fileChooser.getSelectedFile().getAbsolutePath();
-            System.out.println("Your choice: "+chosenName);
-            chosenNameLabel.setText(chosenName);
-            listModel.addElement(chosenName);
-            File file=new File(chosenName);
-            int fileLength=(int)file.length();
-            que.add(new FileMetaData(chosenName,fileLength));
+            if(fileChooser.showOpenDialog(chooseFile)==JFileChooser.APPROVE_OPTION){
+                File[] chosenFiles=fileChooser.getSelectedFiles();
+                for (File file:chosenFiles
+                     ) {
+                    String name=file.getPath();
+                    int length=(int)file.length();
+                    listModel.addElement(name);
+                    que.add(new FileMetaData(name,length));
+                    System.out.println("Your choice: "+name);
+                }
+            }
         }
         else if(clicked==startBuckup)
         {
@@ -151,12 +158,14 @@ public class Client extends JFrame implements ActionListener{
 
                 for (FileMetaData data:que
                      ) {
-                    while(!readFromServer().equals(Server.ready)){
+                    while(!(readFromServer().equals(Server.ready))){
+                        curiosity++;
                         System.out.println("WAITING..");//ani razu nie wypisuje WAITING a dziala :D
                     }
                     sendFile(data,out);
                     out.flush();
                 }
+                System.out.println(curiosity);
                 socket.close();
             }
             catch (IOException e1){
