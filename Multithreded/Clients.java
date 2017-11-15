@@ -50,13 +50,13 @@ public class Clients extends JFrame implements ActionListener {
 
     private void setConnectionForSend(){
         try {
-            socket = new Socket("localhost", getAttainablePort());
+            socket = new Socket("localhost", port);
             InputStream inputStream = socket.getInputStream();
             outNotify = new PrintWriter(socket.getOutputStream(), true);
             bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
         }
         catch (IOException e){
-            System.err.println("Setting connection problem: " +e);
+            System.err.println(e);
         }
     }
 
@@ -123,10 +123,11 @@ public class Clients extends JFrame implements ActionListener {
         contentFrame.add(chosenNameLabel,BorderLayout.SOUTH);
         contentFrame.add(fileQue,BorderLayout.CENTER);
         contentFrame.add(clearButton,BorderLayout.EAST);
+        //contentFrame.add(dirOutTextArea,BorderLayout.NORTH);
         contentFrame.add(chooseFileButton,BorderLayout.NORTH);
         contentFrame.add(startBuckupButton,BorderLayout.WEST);
         setSize(new Dimension(800,200));
-        setLocation(300,200);
+        setLocation(100,100);
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -156,8 +157,7 @@ public class Clients extends JFrame implements ActionListener {
             try {
                 getAttainablePort();
                 setConnectionForSend();
-                System.out.println(port);
-                OutputStream out = socket.getOutputStream();
+                OutputStream out=socket.getOutputStream();
                 outNotify.println(que.size());
                 for (FileMetaData data : que) {
                     sendMetaData(data);
@@ -171,7 +171,7 @@ public class Clients extends JFrame implements ActionListener {
                     sendFile(data,out);
                     out.flush();
                 }
-                //System.out.println(curiosity);
+                System.out.println(curiosity);
                 socket.close();
             }
             catch (IOException e1){
@@ -180,6 +180,7 @@ public class Clients extends JFrame implements ActionListener {
         }
         else if(clicked == clearButton)
         {
+
 
         }
     }

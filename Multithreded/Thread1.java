@@ -1,20 +1,20 @@
 package Multithreded;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
 import static Multithreded.Server.transferPort;
+import static Multithreded.Server.path;
 import static Multithreded.Server.ready;
 import static sun.nio.ch.IOStatus.EOF;
 
 
-public class Thread1 extends JFrame implements Runnable{
+public class Thread1 extends JFrame implements Runnable {
 
-    public static Socket socket = null;
+    private Socket socket = null;
     private InputStream inputStream;
     private BufferedInputStream bufferedInputStream;
     private PrintWriter out;
@@ -26,14 +26,12 @@ public class Thread1 extends JFrame implements Runnable{
     private static JProgressBar progressBar;
     public static final String end = "END";
 
-
     public Thread1() {
-
         progressBar = new JProgressBar();
-        progressBar.setStringPainted(true);
-        setSize(new Dimension(500,100));
+        progressBar.setStringPainted(true);;
+        setSize(500,400);
         add(progressBar);
-        //setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
     }
 
@@ -53,11 +51,10 @@ public class Thread1 extends JFrame implements Runnable{
             out = new PrintWriter(socket.getOutputStream(), true);
             bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             howmany = Integer.parseInt(bufferedReader.readLine());
-            System.out.println(howmany);
             for(int i = 0; i<howmany; i++){
                 int fileLngth = Integer.parseInt(bufferedReader.readLine());
                 String fileNm = bufferedReader.readLine();
-                filesData.add(new FileMetaData(Multithreded.Server.path+fileNm,fileLngth));
+                filesData.add(new FileMetaData(path+"\\"+fileNm,fileLngth));
                 System.out.println(filesData);
             }
             out.println(ready);
