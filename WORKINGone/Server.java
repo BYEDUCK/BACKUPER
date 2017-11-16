@@ -37,7 +37,7 @@ public class Server extends JFrame{
                         transferPort = random.nextInt(65535);
                     }
                     printWriter.println(transferPort);
-                    Runnable runnable = new Thread1();
+                    Runnable runnable = new Thread1(transferPort);
                     Thread transferThread = new Thread(runnable);
                     transferThread.start();
                     setterSocket.close();

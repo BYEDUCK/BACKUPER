@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -25,16 +27,25 @@ public class Thread1 extends JFrame implements Runnable{
     private static JProgressBar progressBar;
     public static final String end = "END";
     private Connection connection;
+    private int transferPort;
     ServerSocket transferSocket = null;
     private MyDatabase mDatabase;
 
-    public Thread1() {
 
+    public Thread1(int port) {
+        transferPort=port;
         progressBar = new JProgressBar();
         progressBar.setStringPainted(true);
         setSize(new Dimension(500,100));
         add(progressBar);
         //setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                super.windowClosing(e);
+                System.exit(0);
+            }
+        });
         setVisible(true);
     }
 
@@ -59,7 +70,7 @@ public class Thread1 extends JFrame implements Runnable{
             String passwordCheck="";
             do{
                 if(transferSocket==null)
-                    transferSocket = new ServerSocket(Server.transferPort);
+                    transferSocket = new ServerSocket(transferPort);
                 socket=transferSocket.accept();
                 out=new PrintWriter(socket.getOutputStream(),true);
                 bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -94,7 +105,7 @@ public class Thread1 extends JFrame implements Runnable{
     @Override
     public void run() {
         try {
-            transferSocket = new ServerSocket(Server.transferPort);
+            transferSocket = new ServerSocket(transferPort);
         } catch (Exception e) {
             System.err.println("Server socket for client creating problem: " + e);
         }
@@ -103,7 +114,7 @@ public class Thread1 extends JFrame implements Runnable{
             if(logIn()) {
                 transferSocket.close();
                 transferSocket=null;
-                transferSocket=new ServerSocket(Server.transferPort);
+                transferSocket=new ServerSocket(transferPort);
                 socket = transferSocket.accept();
                 filesData = new ArrayList<>();
                 inputStream = socket.getInputStream();
