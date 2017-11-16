@@ -29,7 +29,7 @@ public class Clients extends JFrame implements ActionListener {
     private BufferedReader bufferedReader;
     private static int curiosity = 0;
     private Socket socket = null;
-    private static int port;
+    private static int port=-1;
     private boolean loggedIn=false;
 
     public Clients() {
@@ -42,17 +42,21 @@ public class Clients extends JFrame implements ActionListener {
         new Clients();
     }
 
-    private int getAttainablePort() throws IOException {
-        Socket socket = new Socket("localhost", 12129);
-        InputStream inputStream = socket.getInputStream();
-        BufferedReader portReader = new BufferedReader(new InputStreamReader(inputStream));
-        port = Integer.parseInt(portReader.readLine());
-        System.out.println(port);
-        socket.close();
-        return port;
+    private void getAttainablePort() throws IOException {
+        if(port==-1) {
+            Socket socket = new Socket("localhost", 12129);
+            InputStream inputStream = socket.getInputStream();
+            BufferedReader portReader = new BufferedReader(new InputStreamReader(inputStream));
+            port = Integer.parseInt(portReader.readLine());
+            System.out.println("Nowoustawiony port: "+port);
+            socket.close();
+        }
+        else{
+            System.out.println("Poprzednio ustawiony port: "+port);
+        }
     }
 
-    private void setConnectionForLogin(){
+    /*private void setConnectionForLogin(){
         try {
             socket = new Socket("localhost", 12129);
             outNotify=new PrintWriter(socket.getOutputStream(),true);
@@ -61,18 +65,18 @@ public class Clients extends JFrame implements ActionListener {
         catch (IOException e){
             System.err.println(e);
         }
-    }
+    }*/
 
     private void setConnection(){
-        if(socket==null) {
-            try {
-                socket = new Socket("localhost", getAttainablePort());
-                InputStream inputStream = socket.getInputStream();
-                outNotify = new PrintWriter(socket.getOutputStream(), true);
-                bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-            } catch (IOException e) {
-                System.err.println("Setting connection problem: " + e);
-            }
+        try {
+            getAttainablePort();
+            socket = new Socket("localhost", port);
+            InputStream inputStream = socket.getInputStream();
+            outNotify = new PrintWriter(socket.getOutputStream(), true);
+            bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+        }
+        catch (IOException e){
+            System.err.println("Error establishing the connection with server!: "+e);
         }
     }
 
@@ -190,7 +194,7 @@ public class Clients extends JFrame implements ActionListener {
         }
         else if(clicked == startBuckupButton) {
             try {
-                getAttainablePort();
+                //getAttainablePort();
                 setConnection();
                 System.out.println(port);
                 OutputStream out = socket.getOutputStream();
@@ -220,7 +224,7 @@ public class Clients extends JFrame implements ActionListener {
                 String loginText = login.getText();
                 String passwordText = password.getText();
                 //getAttainablePort();
-                setConnectionForLogin();
+                setConnection();
                 System.out.println(port);
                 outNotify.println(loginText);
                 outNotify.println(passwordText);
@@ -228,6 +232,7 @@ public class Clients extends JFrame implements ActionListener {
                 switch (status){
                     case (0):
                         System.out.println("Nie udało się zalogować!");
+                        socket.close();
                         break;
                     case (1):
                         System.out.println("Udało się zalogować!");
