@@ -53,8 +53,8 @@ public class Thread1 extends JFrame implements Runnable{
         mDatabase=new MyDatabase();
         connection=mDatabase.connect();
         mDatabase.startDatabase();
-        //mDatabase.newUser("Andrzej","password");
-        //mDatabase.newUser("Grażyna","password123");
+        mDatabase.newUser("Andrzej","password");
+        mDatabase.newUser("Grażyna","password123");
         ResultSet all=mDatabase.selectViaSQL("SELECT login, password FROM clients;");
         try{
             while(all.next())
