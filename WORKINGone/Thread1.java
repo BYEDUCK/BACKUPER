@@ -46,13 +46,15 @@ public class Thread1 extends JFrame implements Runnable{
                 System.exit(0);
             }
         });
-        setVisible(true);
+        setVisible(false);
     }
 
     private void connectToDatabase(){
         mDatabase=new MyDatabase();
         connection=mDatabase.connect();
         mDatabase.startDatabase();
+        //mDatabase.newUser("Andrzej","password");
+        //mDatabase.newUser("Grażyna","password123");
         ResultSet all=mDatabase.selectViaSQL("SELECT login, password FROM clients;");
         try{
             while(all.next())
@@ -87,6 +89,7 @@ public class Thread1 extends JFrame implements Runnable{
                 }
             }while(!password.equals(passwordCheck));
             System.out.println("Zalogowano!");
+            setVisible(true);
             out.println(1);
             mDatabase.closeConnection();
             connection=null;
@@ -112,48 +115,50 @@ public class Thread1 extends JFrame implements Runnable{
         try {
             connectToDatabase();
             if(logIn()) {
-                transferSocket.close();
-                transferSocket=null;
-                transferSocket=new ServerSocket(transferPort);
-                socket = transferSocket.accept();
-                filesData = new ArrayList<>();
-                inputStream = socket.getInputStream();
-                bufferedInputStream = new BufferedInputStream(inputStream);
-                out = new PrintWriter(socket.getOutputStream(), true);
-                bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                howmany = Integer.parseInt(bufferedReader.readLine());
-                System.out.println(howmany);
-                for (int i = 0; i < howmany; i++) {
-                    int fileLngth = Integer.parseInt(bufferedReader.readLine());
-                    String fileNm = bufferedReader.readLine();
-                    filesData.add(new FileMetaData(Server.path + fileNm, fileLngth));
-                    System.out.println(filesData);
-                }
-                out.println(Server.ready);
-                System.out.println(Server.ready);
-                for (int i = 0; i < howmany; i++) {
-                    fileLength = filesData.get(i).getFileLength();
-                    filePath = filesData.get(i).getFilePath();
-                    progressBar.setMinimum(0);
-                    progressBar.setMaximum(fileLength);
-                    progressBar.setValue(0);
-                    byte[] fileBytes = new byte[fileLength];
-                    int offset = 0;
-                    int read;
-                    while (offset < fileLength && (read = bufferedInputStream.read(fileBytes, offset, fileLength - offset)) != -1) {
-                        offset += read;
-                        progressBar.setValue(offset);
+                while(true) {
+                    transferSocket.close();
+                    transferSocket = null;
+                    transferSocket = new ServerSocket(transferPort);
+                    socket = transferSocket.accept();
+                    filesData = new ArrayList<>();
+                    inputStream = socket.getInputStream();
+                    bufferedInputStream = new BufferedInputStream(inputStream);
+                    out = new PrintWriter(socket.getOutputStream(), true);
+                    bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    howmany = Integer.parseInt(bufferedReader.readLine());
+                    System.out.println(howmany);
+                    for (int i = 0; i < howmany; i++) {
+                        int fileLngth = Integer.parseInt(bufferedReader.readLine());
+                        String fileNm = bufferedReader.readLine();
+                        filesData.add(new FileMetaData(Server.path + fileNm, fileLngth));
+                        System.out.println(filesData);
                     }
-                    System.out.println("Wczytano bajtów: " + offset + "/" + fileLength);
-                    File fileOut = new File(filePath);
-                    FileOutputStream outputLocal = new FileOutputStream(fileOut);
-                    outputLocal.write(fileBytes, 0, fileLength);
-                    outputLocal.flush();
                     out.println(Server.ready);
                     System.out.println(Server.ready);
+                    for (int i = 0; i < howmany; i++) {
+                        fileLength = filesData.get(i).getFileLength();
+                        filePath = filesData.get(i).getFilePath();
+                        progressBar.setMinimum(0);
+                        progressBar.setMaximum(fileLength);
+                        progressBar.setValue(0);
+                        byte[] fileBytes = new byte[fileLength];
+                        int offset = 0;
+                        int read;
+                        while (offset < fileLength && (read = bufferedInputStream.read(fileBytes, offset, fileLength - offset)) != -1) {
+                            offset += read;
+                            progressBar.setValue(offset);
+                        }
+                        System.out.println("Wczytano bajtów: " + offset + "/" + fileLength);
+                        File fileOut = new File(filePath);
+                        FileOutputStream outputLocal = new FileOutputStream(fileOut);
+                        outputLocal.write(fileBytes, 0, fileLength);
+                        outputLocal.flush();
+                        out.println(Server.ready);
+                        System.out.println(Server.ready);
+                    }
+                    out.println(end);
+                    socket.close();
                 }
-                out.println(end);
-                socket.close();
             }
             else{
                 System.out.println("Failed to log in!");
