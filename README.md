@@ -1,1 +1,1 @@
-"# BACKUPER" 
+Program do zdalnego archiwizowania plików.

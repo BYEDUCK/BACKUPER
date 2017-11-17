@@ -14,9 +14,15 @@ public class Clients extends JFrame implements ActionListener {
     private JButton chooseFileButton;
     private JButton startBuckupButton;
     private JButton clearButton;
+    private JLabel userNameLabel;
+    private JLabel passwordLabel;
+    private JButton createUser;
+    private JTextArea userNameArea;
+    private JTextArea passwordArea;
     private JTextArea login;
     private JTextArea password;
     private JButton logIn;
+    private JButton newUser;
     private JFileChooser fileChooser;
     private JLabel chosenNameLabel;
     private JList fileQue;
@@ -30,6 +36,7 @@ public class Clients extends JFrame implements ActionListener {
     private static int curiosity = 0;
     private Socket socket = null;
     private static int port=-1;
+    JFrame newUserFrame;
     private boolean loggedIn=false;
 
     public Clients() {
@@ -124,11 +131,13 @@ public class Clients extends JFrame implements ActionListener {
     private void prepareLogInWindow(){
         logInFrame=new JFrame();
         JPanel contentFrame=(JPanel)logInFrame.getContentPane();
-        contentFrame.setLayout(new GridLayout(3,1));
+        contentFrame.setLayout(new GridLayout(4,1));
         login=new JTextArea();
         password=new JTextArea();
         logIn=new JButton("Zaloguj");
         logIn.addActionListener(this);
+        createUser=new JButton("Załóż konto");
+        createUser.addActionListener(this);
         login.setBounds(0,0,400,25);
         password.setBounds(0,0,400,25);
         logIn.setBounds(0,0,400,100);
@@ -137,9 +146,29 @@ public class Clients extends JFrame implements ActionListener {
         contentFrame.add(login);
         contentFrame.add(password);
         contentFrame.add(logIn);
+        contentFrame.add(createUser);
         logInFrame.setSize(new Dimension(400,150));
         logInFrame.setLocation(100,100);
         logInFrame.setVisible(true);
+    }
+
+    private void prepareNewUserWindow(){
+        newUserFrame=new JFrame();
+        JPanel contentFrame=(JPanel)newUserFrame.getContentPane();
+        userNameLabel=new JLabel("Nazwa użytkownika");
+        userNameArea=new JTextArea();
+        passwordLabel=new JLabel("Hasło");
+        passwordArea=new JTextArea();
+        newUser=new JButton("Załóż konto");
+        newUser.addActionListener(this);
+        contentFrame.setLayout(new GridLayout(5,1));
+        newUserFrame.setSize(new Dimension(300,250));
+        contentFrame.add(userNameLabel);
+        contentFrame.add(userNameArea);
+        contentFrame.add(passwordLabel);
+        contentFrame.add(passwordArea);
+        contentFrame.add(newUser);
+        newUserFrame.setVisible(true);
     }
 
     private void prepareWindow() {
@@ -232,6 +261,8 @@ public class Clients extends JFrame implements ActionListener {
                 switch (status){
                     case (0):
                         System.out.println("Nie udało się zalogować!");
+                        login.setBorder(BorderFactory.createLineBorder(new Color(0xff0000)));
+                        password.setBorder(BorderFactory.createLineBorder(new Color(0xff0000)));
                         socket.close();
                         break;
                     case (1):
@@ -249,6 +280,9 @@ public class Clients extends JFrame implements ActionListener {
             catch (IOException e1){
                 System.err.println(e1);
             }
+        }
+        else if(clicked==createUser){
+            prepareNewUserWindow();
         }
     }
 
