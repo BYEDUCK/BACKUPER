@@ -1,5 +1,3 @@
-package Working;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
@@ -7,6 +5,8 @@ import java.awt.event.WindowEvent;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,6 +32,8 @@ public class Thread1 extends JFrame implements Runnable{
     private int transferPort;
     ServerSocket transferSocket = null;
     private MyDatabase mDatabase;
+    private String userNameActive;
+    private String Path;
 
 
     public Thread1(int port) {
@@ -57,19 +59,10 @@ public class Thread1 extends JFrame implements Runnable{
         mDatabase.startDatabase();
         mDatabase.newUser("Andrzej","password");
         mDatabase.newUser("Grażyna","password123");
-        ResultSet all=mDatabase.selectViaSQL("SELECT login, password FROM clients;");
-        try{
-            while(all.next())
-                System.out.println(all.getString(1)+"; "+all.getString(2)+".\n");
-        }
-        catch (SQLException e){
-            System.err.println(e);
-        }
     }
 
     private boolean logIn(){
         try{
-            String login;
             String password;
             String passwordCheck="";
             do{
@@ -78,9 +71,9 @@ public class Thread1 extends JFrame implements Runnable{
                 socket=transferSocket.accept();
                 out=new PrintWriter(socket.getOutputStream(),true);
                 bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                login=bufferedReader.readLine();
+                userNameActive=bufferedReader.readLine();
                 password=bufferedReader.readLine();
-                ResultSet check=mDatabase.selectViaSQL("SELECT password FROM clients WHERE login='"+login+"';");
+                ResultSet check=mDatabase.selectViaSQL("SELECT password FROM clients WHERE login='"+userNameActive+"';");
                 if(check.next())
                     passwordCheck=check.getString(1);
                 if(!password.equals(passwordCheck)){
@@ -117,6 +110,9 @@ public class Thread1 extends JFrame implements Runnable{
         try {
             connectToDatabase();
             if(logIn()) {
+                Path="E:\\"+userNameActive;
+                if(!(Files.isDirectory(Paths.get(Path))))
+                    Files.createDirectories(Paths.get(Path));
                 while(true) {
                     transferSocket.close();
                     transferSocket = null;
@@ -132,7 +128,7 @@ public class Thread1 extends JFrame implements Runnable{
                     for (int i = 0; i < howmany; i++) {
                         int fileLngth = Integer.parseInt(bufferedReader.readLine());
                         String fileNm = bufferedReader.readLine();
-                        filesData.add(new FileMetaData(Server.path + fileNm, fileLngth));
+                        filesData.add(new FileMetaData(Path+"\\"+ fileNm, fileLngth));
                         System.out.println(filesData);
                     }
                     out.println(Server.ready);
@@ -171,3 +167,4 @@ public class Thread1 extends JFrame implements Runnable{
         }
     }
 }
+
