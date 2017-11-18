@@ -25,13 +25,14 @@ public class Client extends JFrame implements ActionListener {
     private JButton logIn;
     private JButton newUser;
     private JFileChooser fileChooser;
-    private JLabel chosenNameLabel;
+    //private JLabel chosenNameLabel;
     private JList fileQue;
     private JList filesArchivied;
     private JFrame logInFrame;
     private DefaultListModel listModelQue;
     private DefaultListModel listModelSent;
     private ArrayList<FileMetaData> que;
+    private ArrayList<FileMetaData> filesSent;
     private PrintWriter outNotify;
     private BufferedReader bufferedReader;
     private OutputStream outputStream;
@@ -40,11 +41,13 @@ public class Client extends JFrame implements ActionListener {
     private static int port=-1;
     JFrame newUserFrame;
     private boolean loggedIn=false;
+    private JLabel userLoginLabel;
 
     public Client() {
         prepareLogInWindow();
         prepareWindow();
         que = new ArrayList<>();
+        filesSent=new ArrayList<>();
     }
 
     public static void main(String[] args) {
@@ -200,12 +203,15 @@ public class Client extends JFrame implements ActionListener {
                 super.windowClosed(e);
             }
         });
-        chooseFileButton = new JButton("Wybierz plik");
+        JLabel toSendLabel=new JLabel("Files to be send:");
+        JLabel sentLabel=new JLabel("Files sent:");
+        userLoginLabel=new JLabel();
+        chooseFileButton = new JButton("Wybierz pliki do przesłania");
         startBuckupButton = new JButton("Rozpocznij przesyłanie");
-        clearButton = new JButton("Clear");
+        clearButton = new JButton("Clear history");
         fileChooser = new JFileChooser();
         fileChooser.setMultiSelectionEnabled(true);
-        chosenNameLabel = new JLabel("Wybrany plik");
+        //chosenNameLabel = new JLabel("Wybrany plik");
         listModelQue = new DefaultListModel();
         fileQue = new JList(listModelQue);
         listModelSent = new DefaultListModel();
@@ -216,13 +222,16 @@ public class Client extends JFrame implements ActionListener {
         startBuckupButton.addActionListener(this);
         clearButton.addActionListener(this);
         JPanel contentFrame=(JPanel)this.getContentPane();
-        contentFrame.setLayout(new BorderLayout());
-        contentFrame.add(chosenNameLabel,BorderLayout.SOUTH);
-        contentFrame.add(fileQue,BorderLayout.CENTER);
-        contentFrame.add(clearButton,BorderLayout.EAST);
-        contentFrame.add(chooseFileButton,BorderLayout.NORTH);
-        contentFrame.add(startBuckupButton,BorderLayout.WEST);
-        setSize(new Dimension(800,200));
+        contentFrame.setLayout(new GridLayout(8,1));
+        contentFrame.add(chooseFileButton);
+        contentFrame.add(toSendLabel);
+        contentFrame.add(new JScrollPane(fileQue));
+        contentFrame.add(sentLabel);
+        contentFrame.add(new JScrollPane(filesArchivied));
+        contentFrame.add(clearButton);
+        contentFrame.add(startBuckupButton);
+        contentFrame.add(userLoginLabel);
+        setSize(new Dimension(1000,550));
         setLocation(300,200);
         addWindowListener(new WindowAdapter() {
             @Override
@@ -244,6 +253,7 @@ public class Client extends JFrame implements ActionListener {
         }
     }
 
+    @SuppressWarnings("deprecated")
     @Override
     public void actionPerformed(ActionEvent e) {
         Object clicked = e.getSource();
@@ -278,7 +288,11 @@ public class Client extends JFrame implements ActionListener {
                     }
                     sendFile(data,outputStream);
                     outputStream.flush();
+                    filesSent.add(data);
+                    listModelSent.addElement(data.getFilePath());
                 }
+                que.clear();
+                listModelQue.clear();
                 //System.out.println(curiosity);
                 //socket.close();
             }
@@ -287,8 +301,8 @@ public class Client extends JFrame implements ActionListener {
             }
         }
         else if(clicked == clearButton) {
-            listModelQue.clear();
-            que.clear();
+            listModelSent.clear();
+            filesSent.clear();
         }
         else if(clicked == logIn)
         {
@@ -317,6 +331,7 @@ public class Client extends JFrame implements ActionListener {
                         break;
                     case (MyProtocol.LOGGEDIN):
                         System.out.println("Udało się zalogować!");
+                        userLoginLabel.setText("Zalogowano jako: "+loginText+".");
                         loggedIn=true;
                         logInFrame.setVisible(false);
                         setVisible(true);
