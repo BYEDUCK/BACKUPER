@@ -8,7 +8,6 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.StringTokenizer;
 
 
 public class Client extends JFrame implements ActionListener {
@@ -140,6 +139,12 @@ public class Client extends JFrame implements ActionListener {
 
     private void prepareLogInWindow(){
         logInFrame=new JFrame();
+        logInFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                super.windowClosed(e);
+            }
+        });
         JPanel contentFrame=(JPanel)logInFrame.getContentPane();
         contentFrame.setLayout(new GridLayout(4,1));
         login=new JTextArea();
@@ -164,6 +169,13 @@ public class Client extends JFrame implements ActionListener {
 
     private void prepareNewUserWindow(){
         newUserFrame=new JFrame();
+        newUserFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                logInFrame.setVisible(true);
+                super.windowClosing(e);
+            }
+        });
         JPanel contentFrame=(JPanel)newUserFrame.getContentPane();
         userNameLabel=new JLabel("Nazwa użytkownika");
         userNameArea=new JTextArea();
@@ -182,6 +194,12 @@ public class Client extends JFrame implements ActionListener {
     }
 
     private void prepareWindow() {
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                super.windowClosed(e);
+            }
+        });
         chooseFileButton = new JButton("Wybierz plik");
         startBuckupButton = new JButton("Rozpocznij przesyłanie");
         clearButton = new JButton("Clear");
@@ -281,8 +299,9 @@ public class Client extends JFrame implements ActionListener {
                 if(socket==null) {
                     setConnection();
                     System.out.println("Ustalono połączenie: " + port);
-                    outNotify.println(MyProtocol.LOGIN);
+                    //outNotify.println(MyProtocol.LOGIN);
                 }
+                outNotify.println(MyProtocol.LOGIN);
                 outNotify.println(loginText);
                 outNotify.println(passwordText);
                 //int status = Integer.parseInt(bufferedReader.readLine());
@@ -314,7 +333,33 @@ public class Client extends JFrame implements ActionListener {
             }
         }
         else if(clicked==createUser){
+            logInFrame.setVisible(false);
             prepareNewUserWindow();
+        }
+        else if(clicked==newUser){
+            String name=userNameArea.getText();
+            String password=passwordArea.getText();
+            if(socket==null) {
+                setConnection();
+                System.out.println("Ustalono połączenie: " + port);
+            }
+            outNotify.println(MyProtocol.NEWUSER);
+            outNotify.println(name);
+            outNotify.println(password);
+            String response=receive();
+            switch (response){
+                case(MyProtocol.FAILED):
+                    userNameArea.setBorder(BorderFactory.createLineBorder(new Color(0xff0000)));
+                    passwordArea.setBorder(BorderFactory.createLineBorder(new Color(0xff0000)));
+                    break;
+                case (Server.ready):
+                    newUserFrame.setVisible(false);
+                    logInFrame.setVisible(true);
+                    login.setText(name);
+                    break;
+                default:
+                    break;
+            }
         }
     }
 

@@ -1,3 +1,4 @@
+import javax.naming.spi.DirectoryManager;
 import javax.swing.*;
 import java.io.*;
 import java.net.ServerSocket;
@@ -30,14 +31,16 @@ public class MyThread implements Runnable {
     private String userNameActive;
     private String Path;
     private boolean loggedIn=false;
+    private boolean alreadyExists=false;
+    private ArrayList<String> users;
 
     private void connectToDatabase(){
         mDatabase=new MyDatabase();
         connection=mDatabase.connect();
         mDatabase.startDatabase();
-        mDatabase.newUser("Andrzej","password");
+        /*mDatabase.newUser("Andrzej","password");
         mDatabase.newUser("Grażyna","password123");
-        mDatabase.newUser("Mateusz","12345");
+        mDatabase.newUser("Mateusz","12345");*/
     }
 
     public MyThread(int port){
@@ -47,25 +50,22 @@ public class MyThread implements Runnable {
     private boolean logIn(){
         try{
             String password;
-            String passwordCheck="";
-            do{
-                userNameActive=bufferedReader.readLine();
-                password=bufferedReader.readLine();
-                ResultSet check=mDatabase.selectViaSQL("SELECT password FROM clients WHERE login='"+userNameActive+"';");
-                if(check.next())
-                    passwordCheck=check.getString(1);
-                if(!password.equals(passwordCheck)){
-                    System.out.println("Nie udało się zalogować!");
-                    out.println(MyProtocol.FAILED);
-                }
-                else
-                    loggedIn=true;
-            }while(!loggedIn);
+            String passwordCheck = "";
+            userNameActive = bufferedReader.readLine();
+            password = bufferedReader.readLine();
+            ResultSet check = mDatabase.selectViaSQL("SELECT password FROM clients WHERE login='" + userNameActive + "';");
+            if (check.next())
+                passwordCheck = check.getString(1);
+            if (!password.equals(passwordCheck)) {
+                System.out.println("Nie udało się zalogować!");
+                out.println(MyProtocol.FAILED);
+            } else
+                loggedIn = true;
             System.out.println("Zalogowano!");
             //setVisible(true);
             out.println(MyProtocol.LOGGEDIN);
             mDatabase.closeConnection();
-            connection=null;
+            connection = null;
             return true;
         }
         catch (IOException e){
@@ -87,6 +87,16 @@ public class MyThread implements Runnable {
             bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out=new PrintWriter(socket.getOutputStream(),true);
             connectToDatabase();
+            users=new ArrayList<>();
+            ResultSet set=mDatabase.selectViaSQL("SELECT login FROM clients;");
+            try {
+                while (set.next())
+                    users.add(set.getString(1));
+            }
+            catch (SQLException e){
+                System.err.println("Cannot read from database: "+e);
+            }
+            System.out.println("Liczba użytkowników: "+users.size());
         }
         catch (IOException e){
             System.err.println(e);
@@ -113,13 +123,14 @@ public class MyThread implements Runnable {
             socket = transferSocket.accept();
             initilize();
             while(true) {
+                alreadyExists=false;
                 String request = receive();
                 /*StringTokenizer st = new StringTokenizer(request);
                 String command = st.nextToken();*/
                 if(request.equals(MyProtocol.LOGIN)){
                     if(logIn()){
                         Path="E:\\"+userNameActive;
-                        if(!(Files.isDirectory(Paths.get(Path))))
+                        if(Files.notExists(Paths.get(Path)))
                             Files.createDirectories(Paths.get(Path));
                     }
                 }
@@ -165,6 +176,21 @@ public class MyThread implements Runnable {
                     catch (IOException e){
                         System.err.println(e);
                         out.println(MyProtocol.FAILED);
+                    }
+                }
+                else if(request.equals(MyProtocol.NEWUSER)){
+                    String newName=bufferedReader.readLine();
+                    String newPassword=bufferedReader.readLine();
+                    for (String name:users
+                         ) {
+                        if(newName.equals(name)) {
+                            alreadyExists=true;
+                            out.println(MyProtocol.FAILED);
+                        }
+                    }
+                    if(!alreadyExists) {
+                        mDatabase.newUser(newName, newPassword);
+                        out.println(Server.ready);
                     }
                 }
                 else if(request.equals(MyProtocol.LOGOUT)){

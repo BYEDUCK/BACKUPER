@@ -5,4 +5,5 @@ public class MyProtocol {
     public final static String SENDFILE="sendFile";
     public final static String LOGOUT="logOut";
     public final static String LOGGEDOUT="loggedOut";
+    public final static String NEWUSER="newUser";
 }
