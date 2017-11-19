@@ -59,14 +59,16 @@ public class MyThread implements Runnable {
             if (!password.equals(passwordCheck)) {
                 System.out.println("Nie udało się zalogować!");
                 out.println(MyProtocol.FAILED);
-            } else
+                return false;
+            } else {
                 loggedIn = true;
-            System.out.println("Zalogowano!");
-            //setVisible(true);
-            out.println(MyProtocol.LOGGEDIN);
-            mDatabase.closeConnection();
-            connection = null;
-            return true;
+                System.out.println("Zalogowano!");
+                //setVisible(true);
+                out.println(MyProtocol.LOGGEDIN);
+                mDatabase.closeConnection();
+                connection = null;
+                return true;
+            }
         }
         catch (IOException e){
             System.err.println("Network error!: "+e);
@@ -88,10 +90,12 @@ public class MyThread implements Runnable {
             out=new PrintWriter(socket.getOutputStream(),true);
             connectToDatabase();
             users=new ArrayList<>();
-            ResultSet set=mDatabase.selectViaSQL("SELECT login FROM clients;");
+            ResultSet set=mDatabase.selectViaSQL("SELECT login,password FROM clients;");
             try {
-                while (set.next())
+                while (set.next()) {
                     users.add(set.getString(1));
+                    System.out.println(set.getString(1)+":"+set.getString(2)+".");
+                }
             }
             catch (SQLException e){
                 System.err.println("Cannot read from database: "+e);
@@ -179,6 +183,7 @@ public class MyThread implements Runnable {
                     }
                 }
                 else if(request.equals(MyProtocol.NEWUSER)){
+                    //out.println(MyProtocol.OK);
                     String newName=bufferedReader.readLine();
                     String newPassword=bufferedReader.readLine();
                     for (String name:users
