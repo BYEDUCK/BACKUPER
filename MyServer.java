@@ -11,8 +11,6 @@ import java.util.Random;
 public class MyServer extends JFrame{
 
 
-    public static final String ready = "READY";
-    //public static String path = "E:\\BackuperKopie\\";
     private static OutputStream outputStream;
     private static PrintWriter printWriter;
     private static Random random;

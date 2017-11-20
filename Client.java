@@ -31,7 +31,6 @@ public class Client extends JFrame implements ActionListener {
     private JButton newUser;
     private JButton restoreButton;
     private JFileChooser fileChooser;
-    //private JLabel chosenNameLabel;
     private JList fileQue;
     private JList filesArchivied;
     private JFrame logInFrame;
@@ -83,16 +82,7 @@ public class Client extends JFrame implements ActionListener {
         }
     }
 
-    /*private void setConnectionForLogin(){
-        try {
-            socket = new Socket("localhost", 12129);
-            outNotify=new PrintWriter(socket.getOutputStream(),true);
-            bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        }
-        catch (IOException e){
-            System.err.println(e);
-        }
-    }*/
+
 
     private void setConnection(){
         try {
@@ -108,15 +98,7 @@ public class Client extends JFrame implements ActionListener {
         }
     }
 
-    private String readFromServer(){
-        try {
-            return bufferedReader.readLine();
-        }
-        catch (IOException e){
-            System.err.println(e);
-            return null;
-        }
-    }
+
 
     private void sendMetaData(FileMetaData fileData){
         char tmp;
@@ -150,15 +132,7 @@ public class Client extends JFrame implements ActionListener {
         }
     }
 
-    /*public void fillVector() {
-        int amount = Integer.parseInt(receive());
-        System.out.println(amount);
-        if (amount != Integer.parseInt(MyProtocol.NOSUCHFILE)) {
-            for (int i = 0; i < amount; i++) {
-                restoreComboBox.addItem(receive());
-            }
-        }
-    }*/
+
     public void fillVector() {
         String tmp = receive();
         if(tmp.equals(MyProtocol.FILEEXIST)) {
@@ -313,10 +287,6 @@ public class Client extends JFrame implements ActionListener {
         }
         else if(clicked == startBuckupButton) {
             try {
-                //getAttainablePort();
-                //setConnection();
-                //System.out.println(port);
-                //OutputStream out = socket.getOutputStream();
                 outNotify.println(MyProtocol.SENDFILE);
                 outNotify.println(que.size());
                 for (FileMetaData data : que) {
@@ -324,7 +294,7 @@ public class Client extends JFrame implements ActionListener {
                 }
 
                 for (FileMetaData data:que) {
-                    while(!(readFromServer().equals(MyServer.ready))){
+                    while(!(receive().equals(MyProtocol.READY))){
                         curiosity++;
                         System.out.println("WAITING..");//ani razu nie wypisuje WAITING a dziala :D
                     }
@@ -335,8 +305,6 @@ public class Client extends JFrame implements ActionListener {
                 }
                 que.clear();
                 listModelQue.clear();
-                //System.out.println(curiosity);
-                //socket.close();
             }
             catch (IOException e1){
                 System.err.println(e1);
@@ -351,26 +319,20 @@ public class Client extends JFrame implements ActionListener {
             try {
                 String loginText = login.getText();
                 String passwordText = password.getText();
-                //getAttainablePort();
                 if(socket==null) {
                     setConnection();
                     System.out.println("Ustalono połączenie: " + port);
-                    //outNotify.println(MyProtocol.LOGIN);
                 }
                 outNotify.println(MyProtocol.LOGIN);
                 outNotify.println(loginText);
                 outNotify.println(passwordText);
-                //int status = Integer.parseInt(bufferedReader.readLine());
                 String request = receive();
-                /*StringTokenizer st = new StringTokenizer(request);
-                String command = st.nextToken();*/
                 switch (request){
                     case (MyProtocol.FAILED):
                         System.out.println("Nie udało się zalogować!");
                         JOptionPane.showMessageDialog(null, "Błędny login, lub hasło");
                         login.setBorder(BorderFactory.createLineBorder(new Color(0xff0000)));
                         password.setBorder(BorderFactory.createLineBorder(new Color(0xff0000)));
-                        //socket.close();
                         break;
                     case (MyProtocol.LOGGEDIN):
                         System.out.println("Udało się zalogować!");
@@ -379,7 +341,6 @@ public class Client extends JFrame implements ActionListener {
                         logInFrame.setVisible(false);
                         setVisible(true);
                         fillVector();
-                        //socket.close();
                         break;
                     default:
                         System.out.println("PROBLEM!");
@@ -411,7 +372,7 @@ public class Client extends JFrame implements ActionListener {
                     userNameArea.setBorder(BorderFactory.createLineBorder(new Color(0xff0000)));
                     passwordArea.setBorder(BorderFactory.createLineBorder(new Color(0xff0000)));
                     break;
-                case (MyServer.ready):
+                case (MyProtocol.READY):
                     newUserFrame.setVisible(false);
                     logInFrame.setVisible(true);
                     login.setText(name);

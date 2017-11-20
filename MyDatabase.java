@@ -14,16 +14,14 @@ public class MyDatabase {
             "file TEXT,"+
             "owner TEXT);";
 
-    public Connection connect(){
+    public void connect(){
         try{
             String url="jdbc:sqlite:D:/"+fileName;
             connection= DriverManager.getConnection(url);
             System.out.println("Connection established");
-            return connection;
         }
         catch (SQLException e){
             System.err.println("Cannot connect to a database");
-            return null;
         }
     }
 

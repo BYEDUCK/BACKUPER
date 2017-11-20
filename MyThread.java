@@ -12,7 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-public class MyThread implements Runnable {
+public class MyThread /*extends JFrame*/ implements Runnable {
 
     private static Socket socket = null;
     private InputStream inputStream;
@@ -23,9 +23,7 @@ public class MyThread implements Runnable {
     private static String filePath;
     private static int howmany;
     private static ArrayList<FileMetaData> filesData;
-    private static JProgressBar progressBar;
-    public static final String end = "END";
-    private Connection connection;
+    //private static JProgressBar progressBar;
     private int transferPort;
     ServerSocket transferSocket = null;
     private MyDatabase mDatabase;
@@ -40,11 +38,8 @@ public class MyThread implements Runnable {
 
     private void connectToDatabase(){
         mDatabase=new MyDatabase();
-        connection=mDatabase.connect();
+        mDatabase.connect();
         mDatabase.startDatabase();
-        /*mDatabase.newUser("Andrzej","password");
-        mDatabase.newUser("Grażyna","password123");
-        mDatabase.newUser("Mateusz","12345");*/
     }
 
     public MyThread(int port){
@@ -67,10 +62,8 @@ public class MyThread implements Runnable {
             } else {
                 loggedIn = true;
                 System.out.println("Zalogowano!");
-                //setVisible(true);
                 out.println(MyProtocol.LOGGEDIN);
                 mDatabase.closeConnection();
-                connection = null;
                 return true;
             }
         }
@@ -89,6 +82,9 @@ public class MyThread implements Runnable {
 
     private void initilize(){
         try {
+            //progressBar=new JProgressBar();
+            //add(progressBar);
+            //setVisible(false);
             inputStream = socket.getInputStream();
             bufferedInputStream=new BufferedInputStream(inputStream);
             bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -151,13 +147,13 @@ public class MyThread implements Runnable {
             while(true) {
                 alreadyExists=false;
                 String request = receive();
-                /*StringTokenizer st = new StringTokenizer(request);
-                String command = st.nextToken();*/
                 if(request.equals(MyProtocol.LOGIN)){
                     if(logIn()){
-                        Path="C:\\Users\\mpars\\Desktop\\BackuperKopie\\"+userNameActive;
+                        if(Files.notExists(Paths.get("D:\\BackuperKopie")))
+                            Files.createDirectory(Paths.get("D:\\BackuperKopie"));
+                        Path="D:\\BackuperKopie\\"+userNameActive;
                         if(Files.notExists(Paths.get(Path)))
-                            Files.createDirectories(Paths.get(Path));
+                            Files.createDirectory(Paths.get(Path));
                         if(Files.exists(Paths.get(Path + "\\" + "container" + userNameActive + ".txt"))) {
                             out.println(MyProtocol.FILEEXIST);
                             sendTitles();
@@ -168,11 +164,8 @@ public class MyThread implements Runnable {
                 }
                 else if(request.equals(MyProtocol.SENDFILE)){
                     try {
+                        //setVisible(true);
                         filesData = new ArrayList<>();
-                        //inputStream = socket.getInputStream();
-                        //bufferedInputStream = new BufferedInputStream(inputStream);
-                        //out = new PrintWriter(socket.getOutputStream(), true);
-                        //bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                         howmany = Integer.parseInt(bufferedReader.readLine());
                         System.out.println("Ilość plików do pobrania: "+howmany);
                         save = new PrintWriter(Path+"\\"+"container"+userNameActive+".txt");
@@ -184,14 +177,12 @@ public class MyThread implements Runnable {
                             filesData.add(new FileMetaData(Path + "\\" + fileNm, fileLngth));
                             System.out.println(filesData);
                         }
-                        /*PrintWriter save = new PrintWriter(Path+"\\"+"container"+userNameActive+".txt");
-                        save.println(filesNames);*/
                         for(int i = 0;i<filesTitles.size();i++) {
                             save.println(filesTitles.get(i));
                         }
                         save.close();
-                        out.println(MyServer.ready);
-                        System.out.println(MyServer.ready);
+                        out.println(MyProtocol.READY);
+                        System.out.println(MyProtocol.READY);
                         for (int i = 0; i < howmany; i++) {
                             fileLength = filesData.get(i).getFileLength();
                             filePath = filesData.get(i).getFilePath();
@@ -210,8 +201,8 @@ public class MyThread implements Runnable {
                             FileOutputStream outputLocal = new FileOutputStream(fileOut);
                             outputLocal.write(fileBytes, 0, fileLength);
                             outputLocal.flush();
-                            out.println(MyServer.ready);
-                            System.out.println(MyServer.ready);
+                            out.println(MyProtocol.READY);
+                            System.out.println(MyProtocol.READY);
                         }
                     }
                     catch (IOException e){
@@ -220,7 +211,6 @@ public class MyThread implements Runnable {
                     }
                 }
                 else if(request.equals(MyProtocol.NEWUSER)){
-                    //out.println(MyProtocol.OK);
                     String newName=bufferedReader.readLine();
                     String newPassword=bufferedReader.readLine();
                     for (String name:users
@@ -232,7 +222,7 @@ public class MyThread implements Runnable {
                     }
                     if(!alreadyExists) {
                         mDatabase.newUser(newName, newPassword);
-                        out.println(MyServer.ready);
+                        out.println(MyProtocol.READY);
                     }
                 }
                 else if(request.equals(MyProtocol.LOGOUT)){

@@ -10,4 +10,5 @@ public class MyProtocol {
     public final static String NEWUSER="newUser";
     public final static String NOSUCHFILE = "NoSuchFile";
     public final static String FILEEXIST = "FileExist";
+    public final static String READY="ready";
 }
