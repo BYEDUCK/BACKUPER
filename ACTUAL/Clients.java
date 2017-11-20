@@ -7,8 +7,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Vector;
 
 
 public class Clients extends JFrame implements ActionListener {
@@ -18,6 +20,8 @@ public class Clients extends JFrame implements ActionListener {
     private JButton clearButton;
     private JLabel userNameLabel;
     private JLabel passwordLabel;
+    private JLabel restoreLabel;
+    private JComboBox restoreComboBox;
     private JButton createUser;
     private JTextArea userNameArea;
     private JPasswordField passwordArea;
@@ -25,30 +29,44 @@ public class Clients extends JFrame implements ActionListener {
     private JPasswordField password;
     private JButton logIn;
     private JButton newUser;
+    private JButton restoreButton;
     private JFileChooser fileChooser;
-    private JLabel chosenNameLabel;
+    //private JLabel chosenNameLabel;
     private JList fileQue;
     private JList filesArchivied;
     private JFrame logInFrame;
     private DefaultListModel listModelQue;
     private DefaultListModel listModelSent;
     private ArrayList<FileMetaData> que;
+    private ArrayList<FileMetaData> filesSent;
     private PrintWriter outNotify;
     private BufferedReader bufferedReader;
+    private OutputStream outputStream;
     private static int curiosity = 0;
     private Socket socket = null;
     private static int port=-1;
     JFrame newUserFrame;
     private boolean loggedIn=false;
+    private JLabel userLoginLabel;
+    private Vector<String> restoreFiles;
+    private int filesNumber;
+    private String ignored;
 
     public Clients() {
         prepareLogInWindow();
         prepareWindow();
         que = new ArrayList<>();
+        filesSent=new ArrayList<>();
     }
 
     public static void main(String[] args) {
         new Clients();
+        try {
+            System.out.println(InetAddress.getLocalHost().getHostAddress());
+        }
+        catch (Exception e){
+            System.err.println(e);
+        }
     }
 
     private void getAttainablePort() throws IOException {
@@ -83,6 +101,7 @@ public class Clients extends JFrame implements ActionListener {
             InputStream inputStream = socket.getInputStream();
             outNotify = new PrintWriter(socket.getOutputStream(), true);
             bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+            outputStream=socket.getOutputStream();
         }
         catch (IOException e){
             System.err.println("Error establishing the connection with server!: "+e);
@@ -119,6 +138,7 @@ public class Clients extends JFrame implements ActionListener {
         try {
 
             File file = new File(fileData.getFilePath());
+
             int fileLength = fileData.getFileLength();
             FileInputStream inputLocal = new FileInputStream(file);
             byte[] bytesFile = new byte[fileLength];
@@ -129,9 +149,27 @@ public class Clients extends JFrame implements ActionListener {
         }
     }
 
+    public void fillVector() {
+        int amount = Integer.parseInt(receive());
+        System.out.println(amount);
+        if (amount != 0) {
+            for (int i = 0; i < amount; i++) {
+                restoreComboBox.addItem(receive());
+            }
+        }
+        else
+            ignored = receive();
+    }
+
 
     private void prepareLogInWindow(){
         logInFrame=new JFrame();
+        logInFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                super.windowClosed(e);
+            }
+        });
         JPanel contentFrame=(JPanel)logInFrame.getContentPane();
         contentFrame.setLayout(new GridLayout(4,1));
         login=new JTextArea();
@@ -152,10 +190,18 @@ public class Clients extends JFrame implements ActionListener {
         logInFrame.setSize(new Dimension(400,150));
         logInFrame.setLocation(100,100);
         logInFrame.setVisible(true);
+        logInFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
     private void prepareNewUserWindow(){
         newUserFrame=new JFrame();
+        newUserFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                logInFrame.setVisible(true);
+                super.windowClosing(e);
+            }
+        });
         JPanel contentFrame=(JPanel)newUserFrame.getContentPane();
         userNameLabel=new JLabel("Nazwa użytkownika");
         userNameArea=new JTextArea();
@@ -174,12 +220,24 @@ public class Clients extends JFrame implements ActionListener {
     }
 
     private void prepareWindow() {
-        chooseFileButton = new JButton("Wybierz plik");
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                super.windowClosed(e);
+            }
+        });
+        JLabel toSendLabel=new JLabel("Files to be send:");
+        JLabel sentLabel=new JLabel("Files sent:");
+        userLoginLabel=new JLabel();
+        chooseFileButton = new JButton("Wybierz pliki do przesłania");
         startBuckupButton = new JButton("Rozpocznij przesyłanie");
-        clearButton = new JButton("Clear");
+        clearButton = new JButton("Clear history");
         fileChooser = new JFileChooser();
         fileChooser.setMultiSelectionEnabled(true);
-        chosenNameLabel = new JLabel("Wybrany plik");
+        restoreLabel = new JLabel("Przywróć pliki:");
+        restoreComboBox = new JComboBox();
+        restoreButton = new JButton("Odtwórz plik");
+        //chosenNameLabel = new JLabel("Wybrany plik");
         listModelQue = new DefaultListModel();
         fileQue = new JList(listModelQue);
         listModelSent = new DefaultListModel();
@@ -190,13 +248,19 @@ public class Clients extends JFrame implements ActionListener {
         startBuckupButton.addActionListener(this);
         clearButton.addActionListener(this);
         JPanel contentFrame=(JPanel)this.getContentPane();
-        contentFrame.setLayout(new BorderLayout());
-        contentFrame.add(chosenNameLabel,BorderLayout.SOUTH);
-        contentFrame.add(fileQue,BorderLayout.CENTER);
-        contentFrame.add(clearButton,BorderLayout.EAST);
-        contentFrame.add(chooseFileButton,BorderLayout.NORTH);
-        contentFrame.add(startBuckupButton,BorderLayout.WEST);
-        setSize(new Dimension(800,200));
+        contentFrame.setLayout(new GridLayout(11,2));
+        contentFrame.add(chooseFileButton);
+        contentFrame.add(toSendLabel);
+        contentFrame.add(new JScrollPane(fileQue));
+        contentFrame.add(sentLabel);
+        contentFrame.add(new JScrollPane(filesArchivied));
+        contentFrame.add(clearButton);
+        contentFrame.add(startBuckupButton);
+        contentFrame.add(restoreLabel);
+        contentFrame.add(restoreComboBox);
+        contentFrame.add(restoreButton);
+        contentFrame.add(userLoginLabel);
+        setSize(new Dimension(650,650));
         setLocation(300,200);
         addWindowListener(new WindowAdapter() {
             @Override
@@ -208,6 +272,17 @@ public class Clients extends JFrame implements ActionListener {
         setVisible(false);
     }
 
+    private String receive(){
+        try{
+            return bufferedReader.readLine();
+        }
+        catch (IOException e){
+            System.err.println(e);
+            return null;
+        }
+    }
+
+    @SuppressWarnings("deprecated")
     @Override
     public void actionPerformed(ActionEvent e) {
         Object clicked = e.getSource();
@@ -226,32 +301,37 @@ public class Clients extends JFrame implements ActionListener {
         else if(clicked == startBuckupButton) {
             try {
                 //getAttainablePort();
-                setConnection();
-                System.out.println(port);
-                OutputStream out = socket.getOutputStream();
+                //setConnection();
+                //System.out.println(port);
+                //OutputStream out = socket.getOutputStream();
+                outNotify.println(MyProtocol.SENDFILE);
                 outNotify.println(que.size());
                 for (FileMetaData data : que) {
                     sendMetaData(data);
                 }
 
                 for (FileMetaData data:que) {
-                    while(!(readFromServer().equals(Server.ready))){
+                    while(!(readFromServer().equals(MyServer.ready))){
                         curiosity++;
                         System.out.println("WAITING..");//ani razu nie wypisuje WAITING a dziala :D
                     }
-                    sendFile(data,out);
-                    out.flush();
+                    sendFile(data,outputStream);
+                    outputStream.flush();
+                    filesSent.add(data);
+                    listModelSent.addElement(data.getFilePath());
                 }
+                que.clear();
+                listModelQue.clear();
                 //System.out.println(curiosity);
-                socket.close();
+                //socket.close();
             }
             catch (IOException e1){
                 System.err.println(e1);
             }
         }
         else if(clicked == clearButton) {
-            listModelQue.clear();
-            que.clear();
+            listModelSent.clear();
+            filesSent.clear();
         }
         else if(clicked == logIn)
         {
@@ -259,23 +339,34 @@ public class Clients extends JFrame implements ActionListener {
                 String loginText = login.getText();
                 String passwordText = password.getText();
                 //getAttainablePort();
-                setConnection();
-                System.out.println(port);
+                if(socket==null) {
+                    setConnection();
+                    System.out.println("Ustalono połączenie: " + port);
+                    //outNotify.println(MyProtocol.LOGIN);
+                }
+                outNotify.println(MyProtocol.LOGIN);
                 outNotify.println(loginText);
                 outNotify.println(passwordText);
-                int status = Integer.parseInt(bufferedReader.readLine());
-                switch (status){
-                    case (0):
+                //int status = Integer.parseInt(bufferedReader.readLine());
+                String request = receive();
+                /*StringTokenizer st = new StringTokenizer(request);
+                String command = st.nextToken();*/
+                switch (request){
+                    case (MyProtocol.FAILED):
                         System.out.println("Nie udało się zalogować!");
+                        JOptionPane.showMessageDialog(null, "Błędny login, lub hasło");
                         login.setBorder(BorderFactory.createLineBorder(new Color(0xff0000)));
                         password.setBorder(BorderFactory.createLineBorder(new Color(0xff0000)));
-                        socket.close();
+                        //socket.close();
                         break;
-                    case (1):
+                    case (MyProtocol.LOGGEDIN):
                         System.out.println("Udało się zalogować!");
+                        userLoginLabel.setText("Zalogowano jako: "+loginText+".");
+                        loggedIn=true;
                         logInFrame.setVisible(false);
                         setVisible(true);
-                        socket.close();
+                        fillVector();
+                        //socket.close();
                         break;
                     default:
                         System.out.println("PROBLEM!");
@@ -288,7 +379,33 @@ public class Clients extends JFrame implements ActionListener {
             }
         }
         else if(clicked==createUser){
+            logInFrame.setVisible(false);
             prepareNewUserWindow();
+        }
+        else if(clicked==newUser){
+            String name=userNameArea.getText();
+            String password=passwordArea.getText();
+            if(socket==null) {
+                setConnection();
+                System.out.println("Ustalono połączenie: " + port);
+            }
+            outNotify.println(MyProtocol.NEWUSER);
+            outNotify.println(name);
+            outNotify.println(password);
+            String response=receive();
+            switch (response){
+                case(MyProtocol.FAILED):
+                    userNameArea.setBorder(BorderFactory.createLineBorder(new Color(0xff0000)));
+                    passwordArea.setBorder(BorderFactory.createLineBorder(new Color(0xff0000)));
+                    break;
+                case (MyServer.ready):
+                    newUserFrame.setVisible(false);
+                    logInFrame.setVisible(true);
+                    login.setText(name);
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
