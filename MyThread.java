@@ -61,7 +61,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                 return false;
             } else {
                 loggedIn = true;
-                System.out.println("Zalogowano!");
+                System.out.println("Zalogowano!: "+userNameActive);
                 out.println(MyProtocol.LOGGEDIN);
                 mDatabase.closeConnection();
                 return true;
@@ -104,7 +104,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
             System.out.println("Liczba użytkowników: "+users.size());
         }
         catch (IOException e){
-            System.err.println(e);
+            System.err.println("Cannot initilize app:"+e);
         }
     }
 
@@ -147,6 +147,10 @@ public class MyThread /*extends JFrame*/ implements Runnable {
             while(true) {
                 alreadyExists=false;
                 String request = receive();
+                if(request==null) {
+                    System.out.println("WYLOGOWANO: "+userNameActive);
+                    break;
+                }
                 if(request.equals(MyProtocol.LOGIN)){
                     if(logIn()){
                         if(Files.notExists(Paths.get("D:\\BackuperKopie")))
