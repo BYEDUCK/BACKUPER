@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Vector;
 
 
-public class Clients extends JFrame implements ActionListener {
+public class Client extends JFrame implements ActionListener {
 
     private JButton chooseFileButton;
     private JButton startBuckupButton;
@@ -52,7 +52,7 @@ public class Clients extends JFrame implements ActionListener {
     private int filesNumber;
     private String ignored;
 
-    public Clients() {
+    public Client() {
         prepareLogInWindow();
         prepareWindow();
         que = new ArrayList<>();
@@ -60,7 +60,7 @@ public class Clients extends JFrame implements ActionListener {
     }
 
     public static void main(String[] args) {
-        new Clients();
+        new Client();
         try {
             System.out.println(InetAddress.getLocalHost().getHostAddress());
         }
