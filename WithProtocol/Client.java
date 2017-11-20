@@ -1,3 +1,5 @@
+package Working;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -8,15 +10,18 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Vector;
 
 
-public class Client extends JFrame implements ActionListener {
+public class Clients extends JFrame implements ActionListener {
 
     private JButton chooseFileButton;
     private JButton startBuckupButton;
     private JButton clearButton;
     private JLabel userNameLabel;
     private JLabel passwordLabel;
+    private JLabel restoreLabel;
+    private JComboBox restoreComboBox;
     private JButton createUser;
     private JTextArea userNameArea;
     private JPasswordField passwordArea;
@@ -24,6 +29,7 @@ public class Client extends JFrame implements ActionListener {
     private JPasswordField password;
     private JButton logIn;
     private JButton newUser;
+    private JButton restoreButton;
     private JFileChooser fileChooser;
     //private JLabel chosenNameLabel;
     private JList fileQue;
@@ -42,8 +48,11 @@ public class Client extends JFrame implements ActionListener {
     JFrame newUserFrame;
     private boolean loggedIn=false;
     private JLabel userLoginLabel;
+    private Vector<String> restoreFiles;
+    private int filesNumber;
+    private String ignored;
 
-    public Client() {
+    public Clients() {
         prepareLogInWindow();
         prepareWindow();
         que = new ArrayList<>();
@@ -51,7 +60,7 @@ public class Client extends JFrame implements ActionListener {
     }
 
     public static void main(String[] args) {
-        new Client();
+        new Clients();
         try {
             System.out.println(InetAddress.getLocalHost().getHostAddress());
         }
@@ -129,6 +138,7 @@ public class Client extends JFrame implements ActionListener {
         try {
 
             File file = new File(fileData.getFilePath());
+
             int fileLength = fileData.getFileLength();
             FileInputStream inputLocal = new FileInputStream(file);
             byte[] bytesFile = new byte[fileLength];
@@ -137,6 +147,18 @@ public class Client extends JFrame implements ActionListener {
         } catch (Exception e){
             System.err.println(e);
         }
+    }
+
+    public void fillVector() {
+        int amount = Integer.parseInt(receive());
+        System.out.println(amount);
+        if (amount != 0) {
+            for (int i = 0; i < amount; i++) {
+                restoreComboBox.addItem(receive());
+            }
+        }
+        else
+            ignored = receive();
     }
 
 
@@ -168,6 +190,7 @@ public class Client extends JFrame implements ActionListener {
         logInFrame.setSize(new Dimension(400,150));
         logInFrame.setLocation(100,100);
         logInFrame.setVisible(true);
+        logInFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
     private void prepareNewUserWindow(){
@@ -211,6 +234,9 @@ public class Client extends JFrame implements ActionListener {
         clearButton = new JButton("Clear history");
         fileChooser = new JFileChooser();
         fileChooser.setMultiSelectionEnabled(true);
+        restoreLabel = new JLabel("Przywróć pliki:");
+        restoreComboBox = new JComboBox();
+        restoreButton = new JButton("Odtwórz plik");
         //chosenNameLabel = new JLabel("Wybrany plik");
         listModelQue = new DefaultListModel();
         fileQue = new JList(listModelQue);
@@ -222,7 +248,7 @@ public class Client extends JFrame implements ActionListener {
         startBuckupButton.addActionListener(this);
         clearButton.addActionListener(this);
         JPanel contentFrame=(JPanel)this.getContentPane();
-        contentFrame.setLayout(new GridLayout(8,1));
+        contentFrame.setLayout(new GridLayout(11,2));
         contentFrame.add(chooseFileButton);
         contentFrame.add(toSendLabel);
         contentFrame.add(new JScrollPane(fileQue));
@@ -230,8 +256,11 @@ public class Client extends JFrame implements ActionListener {
         contentFrame.add(new JScrollPane(filesArchivied));
         contentFrame.add(clearButton);
         contentFrame.add(startBuckupButton);
+        contentFrame.add(restoreLabel);
+        contentFrame.add(restoreComboBox);
+        contentFrame.add(restoreButton);
         contentFrame.add(userLoginLabel);
-        setSize(new Dimension(1000,550));
+        setSize(new Dimension(650,650));
         setLocation(300,200);
         addWindowListener(new WindowAdapter() {
             @Override
@@ -282,7 +311,7 @@ public class Client extends JFrame implements ActionListener {
                 }
 
                 for (FileMetaData data:que) {
-                    while(!(readFromServer().equals(Server.ready))){
+                    while(!(readFromServer().equals(MyServer.ready))){
                         curiosity++;
                         System.out.println("WAITING..");//ani razu nie wypisuje WAITING a dziala :D
                     }
@@ -325,6 +354,7 @@ public class Client extends JFrame implements ActionListener {
                 switch (request){
                     case (MyProtocol.FAILED):
                         System.out.println("Nie udało się zalogować!");
+                        JOptionPane.showMessageDialog(null, "Błędny login, lub hasło");
                         login.setBorder(BorderFactory.createLineBorder(new Color(0xff0000)));
                         password.setBorder(BorderFactory.createLineBorder(new Color(0xff0000)));
                         //socket.close();
@@ -335,6 +365,7 @@ public class Client extends JFrame implements ActionListener {
                         loggedIn=true;
                         logInFrame.setVisible(false);
                         setVisible(true);
+                        fillVector();
                         //socket.close();
                         break;
                     default:
@@ -367,7 +398,7 @@ public class Client extends JFrame implements ActionListener {
                     userNameArea.setBorder(BorderFactory.createLineBorder(new Color(0xff0000)));
                     passwordArea.setBorder(BorderFactory.createLineBorder(new Color(0xff0000)));
                     break;
-                case (Server.ready):
+                case (MyServer.ready):
                     newUserFrame.setVisible(false);
                     logInFrame.setVisible(true);
                     login.setText(name);

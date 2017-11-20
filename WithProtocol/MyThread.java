@@ -1,15 +1,17 @@
+package Working;
+
 import javax.naming.spi.DirectoryManager;
 import javax.swing.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.StringTokenizer;
+import java.util.*;
 
 public class MyThread implements Runnable {
 
@@ -33,6 +35,9 @@ public class MyThread implements Runnable {
     private boolean loggedIn=false;
     private boolean alreadyExists=false;
     private ArrayList<String> users;
+    private Vector <String> filesNames = new Vector<>();
+    private List<String> filesTitles = new ArrayList<>();
+    private PrintWriter save;
 
     private void connectToDatabase(){
         mDatabase=new MyDatabase();
@@ -82,6 +87,7 @@ public class MyThread implements Runnable {
         }
     }
 
+
     private void initilize(){
         try {
             inputStream = socket.getInputStream();
@@ -115,6 +121,22 @@ public class MyThread implements Runnable {
             return null;
         }
     }
+    public void sendTitles() {
+        Path path = Paths.get(Path + "\\" + "container" + userNameActive + ".txt");
+        try {
+            filesTitles = Files.readAllLines(path);
+            out.println(filesTitles.size());
+            for (int i = 0; i < filesTitles.size(); i++) {
+                out.println(filesTitles.get(i));
+                System.out.println(filesTitles.get(i));
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     @Override
     public void run() {
@@ -133,9 +155,13 @@ public class MyThread implements Runnable {
                 String command = st.nextToken();*/
                 if(request.equals(MyProtocol.LOGIN)){
                     if(logIn()){
-                        Path="E:\\"+userNameActive;
+                        Path="C:\\Users\\mpars\\Desktop\\BackuperKopie\\"+userNameActive;
                         if(Files.notExists(Paths.get(Path)))
                             Files.createDirectories(Paths.get(Path));
+                        if(Files.exists(Paths.get(Path + "\\" + "container" + userNameActive + ".txt")))
+                        sendTitles();
+                        else
+                            out.println(MyProtocol.NOSUCHFILE);
                     }
                 }
                 else if(request.equals(MyProtocol.SENDFILE)){
@@ -147,14 +173,23 @@ public class MyThread implements Runnable {
                         //bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                         howmany = Integer.parseInt(bufferedReader.readLine());
                         System.out.println("Ilość plików do pobrania: "+howmany);
+                        save = new PrintWriter(Path+"\\"+"container"+userNameActive+".txt");
                         for (int i = 0; i < howmany; i++) {
                             int fileLngth = Integer.parseInt(bufferedReader.readLine());
                             String fileNm = bufferedReader.readLine();
+                            filesNames.add(fileNm);
+                            save.println(fileNm);
                             filesData.add(new FileMetaData(Path + "\\" + fileNm, fileLngth));
                             System.out.println(filesData);
                         }
-                        out.println(Server.ready);
-                        System.out.println(Server.ready);
+                        /*PrintWriter save = new PrintWriter(Path+"\\"+"container"+userNameActive+".txt");
+                        save.println(filesNames);*/
+                        for(int i = 0;i<filesTitles.size();i++) {
+                            save.println(filesTitles.get(i));
+                        }
+                        save.close();
+                        out.println(MyServer.ready);
+                        System.out.println(MyServer.ready);
                         for (int i = 0; i < howmany; i++) {
                             fileLength = filesData.get(i).getFileLength();
                             filePath = filesData.get(i).getFilePath();
@@ -173,8 +208,8 @@ public class MyThread implements Runnable {
                             FileOutputStream outputLocal = new FileOutputStream(fileOut);
                             outputLocal.write(fileBytes, 0, fileLength);
                             outputLocal.flush();
-                            out.println(Server.ready);
-                            System.out.println(Server.ready);
+                            out.println(MyServer.ready);
+                            System.out.println(MyServer.ready);
                         }
                     }
                     catch (IOException e){
@@ -187,7 +222,7 @@ public class MyThread implements Runnable {
                     String newName=bufferedReader.readLine();
                     String newPassword=bufferedReader.readLine();
                     for (String name:users
-                         ) {
+                            ) {
                         if(newName.equals(name)) {
                             alreadyExists=true;
                             out.println(MyProtocol.FAILED);
@@ -195,7 +230,7 @@ public class MyThread implements Runnable {
                     }
                     if(!alreadyExists) {
                         mDatabase.newUser(newName, newPassword);
-                        out.println(Server.ready);
+                        out.println(MyServer.ready);
                     }
                 }
                 else if(request.equals(MyProtocol.LOGOUT)){
@@ -203,8 +238,10 @@ public class MyThread implements Runnable {
                 }
             }
         }
+
         catch (Exception e){
             System.err.println(e);
         }
     }
+
 }
