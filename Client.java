@@ -1,4 +1,4 @@
-package BACKUPER;
+package Working;
 
 import javax.swing.*;
 import java.awt.*;
@@ -50,7 +50,7 @@ public class Client extends JFrame implements ActionListener {
     private JLabel userLoginLabel;
     private Vector<String> restoreFiles;
     private int filesNumber;
-    private String ignored;
+    private int ignored;
 
     public Client() {
         prepareLogInWindow();
@@ -132,6 +132,7 @@ public class Client extends JFrame implements ActionListener {
         String fileName=builder.reverse().toString();
         outNotify.println(fileData.getFileLength());
         outNotify.println(fileName);
+        restoreComboBox.addItem(fileName);
     }
 
     private void sendFile(FileMetaData fileData, OutputStream out){
@@ -149,16 +150,28 @@ public class Client extends JFrame implements ActionListener {
         }
     }
 
-    public void fillVector() {
+    /*public void fillVector() {
         int amount = Integer.parseInt(receive());
         System.out.println(amount);
-        if (amount != 0) {
+        if (amount != Integer.parseInt(MyProtocol.NOSUCHFILE)) {
             for (int i = 0; i < amount; i++) {
                 restoreComboBox.addItem(receive());
             }
         }
-        else
-            ignored = receive();
+    }*/
+    public void fillVector() {
+        String tmp = receive();
+        if(tmp.equals(MyProtocol.FILEEXIST)) {
+            int amount = Integer.parseInt(receive());
+            System.out.println(amount);
+            System.out.println(tmp);
+            if (amount != 0) {
+                for (int i = 0; i < amount; i++) {
+                    restoreComboBox.addItem(receive());
+                }
+            }
+        }else
+        System.out.println(tmp);
     }
 
 

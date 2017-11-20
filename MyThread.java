@@ -1,4 +1,4 @@
-package BACKUPER;
+package Working;
 
 import javax.naming.spi.DirectoryManager;
 import javax.swing.*;
@@ -126,6 +126,7 @@ public class MyThread implements Runnable {
         try {
             filesTitles = Files.readAllLines(path);
             out.println(filesTitles.size());
+            System.out.println(filesTitles.size());
             for (int i = 0; i < filesTitles.size(); i++) {
                 out.println(filesTitles.get(i));
                 System.out.println(filesTitles.get(i));
@@ -158,8 +159,10 @@ public class MyThread implements Runnable {
                         Path="C:\\Users\\mpars\\Desktop\\BackuperKopie\\"+userNameActive;
                         if(Files.notExists(Paths.get(Path)))
                             Files.createDirectories(Paths.get(Path));
-                        if(Files.exists(Paths.get(Path + "\\" + "container" + userNameActive + ".txt")))
-                        sendTitles();
+                        if(Files.exists(Paths.get(Path + "\\" + "container" + userNameActive + ".txt"))) {
+                            out.println(MyProtocol.FILEEXIST);
+                            sendTitles();
+                        }
                         else
                             out.println(MyProtocol.NOSUCHFILE);
                     }

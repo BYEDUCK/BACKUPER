@@ -1,8 +1,9 @@
-package BACKUPER;
+package Working;
+
 public class FileMetaData {
     private int fileLength;
     private String filePath;
-    public int getFileLength(){
+    public int getFileLength() {
         return this.fileLength;
     }
     public String getFilePath() {

@@ -1,4 +1,4 @@
-package BACKUPER;
+package Working;
 
 public class MyProtocol {
     public final static String LOGGEDIN="loggedIn";
@@ -9,4 +9,5 @@ public class MyProtocol {
     public final static String LOGGEDOUT="loggedOut";
     public final static String NEWUSER="newUser";
     public final static String NOSUCHFILE = "NoSuchFile";
+    public final static String FILEEXIST = "FileExist";
 }

@@ -1,4 +1,5 @@
-package BACKUPER;
+package Working;
+
 import java.sql.*;
 
 public class MyDatabase {
@@ -8,10 +9,14 @@ public class MyDatabase {
             "id INTEGER PRIMARY KEY,"+
             "login TEXT,"+
             "password TEXT);";
+    private final static String startFilesTable = "CREATE TABLE IF NOT EXISTS files (" +
+            "id INTEGER PRIMARY KEY,"+
+            "file TEXT,"+
+            "owner TEXT);";
 
     public Connection connect(){
         try{
-            String url="jdbc:sqlite:E:/"+fileName;
+            String url="jdbc:sqlite:D:/"+fileName;
             connection= DriverManager.getConnection(url);
             System.out.println("Connection established");
             return connection;
@@ -27,6 +32,7 @@ public class MyDatabase {
             try{
                 Statement statement=connection.createStatement();
                 statement.execute(startClientsTable);
+                statement.execute(startFilesTable);
             }
             catch (SQLException e){
                 System.err.println("Cannot start database");
@@ -58,6 +64,7 @@ public class MyDatabase {
             System.err.println(e);
         }
     }
+
 
     public void closeConnection(){
         if(connection!=null){
