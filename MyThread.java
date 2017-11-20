@@ -1,5 +1,4 @@
-package Working;
-
+package BACKUPER;
 import javax.naming.spi.DirectoryManager;
 import javax.swing.*;
 import java.io.*;
@@ -159,7 +158,7 @@ public class MyThread implements Runnable {
                         if(Files.notExists(Paths.get(Path)))
                             Files.createDirectories(Paths.get(Path));
                         if(Files.exists(Paths.get(Path + "\\" + "container" + userNameActive + ".txt")))
-                        sendTitles();
+                            sendTitles();
                         else
                             out.println(MyProtocol.NOSUCHFILE);
                     }
