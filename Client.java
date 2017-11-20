@@ -47,6 +47,7 @@ public class Client extends JFrame implements ActionListener {
     JFrame newUserFrame;
     private boolean loggedIn=false;
     private JLabel userLoginLabel;
+    private JButton logout;
     private Vector<String> restoreFiles;
     private int filesNumber;
     private int ignored;
@@ -133,8 +134,9 @@ public class Client extends JFrame implements ActionListener {
     }
 
 
-    public void fillVector() {
+    private void fillVector() {
         String tmp = receive();
+        restoreComboBox.removeAllItems();
         if(tmp.equals(MyProtocol.FILEEXIST)) {
             int amount = Integer.parseInt(receive());
             System.out.println(amount);
@@ -147,6 +149,7 @@ public class Client extends JFrame implements ActionListener {
         }else
         System.out.println(tmp);
     }
+
 
 
     private void prepareLogInWindow(){
@@ -215,6 +218,8 @@ public class Client extends JFrame implements ActionListener {
         });
         JLabel toSendLabel=new JLabel("Files to be send:");
         JLabel sentLabel=new JLabel("Files sent:");
+        logout=new JButton("LOGOUT");
+        logout.addActionListener(this);
         userLoginLabel=new JLabel();
         chooseFileButton = new JButton("Wybierz pliki do przesłania");
         startBuckupButton = new JButton("Rozpocznij przesyłanie");
@@ -235,7 +240,7 @@ public class Client extends JFrame implements ActionListener {
         startBuckupButton.addActionListener(this);
         clearButton.addActionListener(this);
         JPanel contentFrame=(JPanel)this.getContentPane();
-        contentFrame.setLayout(new GridLayout(11,2));
+        contentFrame.setLayout(new GridLayout(12,2));
         contentFrame.add(chooseFileButton);
         contentFrame.add(toSendLabel);
         contentFrame.add(new JScrollPane(fileQue));
@@ -247,6 +252,7 @@ public class Client extends JFrame implements ActionListener {
         contentFrame.add(restoreComboBox);
         contentFrame.add(restoreButton);
         contentFrame.add(userLoginLabel);
+        contentFrame.add(logout);
         setSize(new Dimension(650,650));
         setLocation(300,200);
         addWindowListener(new WindowAdapter() {
@@ -380,6 +386,22 @@ public class Client extends JFrame implements ActionListener {
                 default:
                     break;
             }
+        }
+        else if(clicked==logout){
+            outNotify.println(MyProtocol.LOGOUT);
+            try{
+                socket.close();
+                socket=null;
+            }
+            catch (IOException e1){
+                System.err.println("Error loggin out (client): "+e1);
+                socket=null;
+            }
+            port=-1;
+            logInFrame.setVisible(true);
+            setVisible(false);
+            login.setText("");
+            password.setText("");
         }
     }
 

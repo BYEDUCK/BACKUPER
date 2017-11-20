@@ -175,7 +175,6 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                             filesNames.add(fileNm);
                             save.println(fileNm);
                             filesData.add(new FileMetaData(Path + "\\" + fileNm, fileLngth));
-                            System.out.println(filesData);
                         }
                         for(int i = 0;i<filesTitles.size();i++) {
                             save.println(filesTitles.get(i));
@@ -226,7 +225,15 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                     }
                 }
                 else if(request.equals(MyProtocol.LOGOUT)){
-
+                    System.out.println("WYLOGOWANO: "+userNameActive);
+                    try {
+                        socket.close();
+                        transferSocket.close();
+                    }
+                    catch (IOException e){
+                        System.err.println(e);
+                    }
+                    break;
                 }
             }
         }
