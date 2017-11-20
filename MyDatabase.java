@@ -14,9 +14,9 @@ public class MyDatabase {
             "file TEXT,"+
             "owner TEXT);";
 
-    public void connect(){
+    public void connect(String path){
         try{
-            String url="jdbc:sqlite:D:/"+fileName;
+            String url=path+fileName;
             connection= DriverManager.getConnection(url);
             System.out.println("Connection established");
         }

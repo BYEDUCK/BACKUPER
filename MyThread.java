@@ -38,7 +38,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
 
     private void connectToDatabase(){
         mDatabase=new MyDatabase();
-        mDatabase.connect();
+        mDatabase.connect("jdbc:sqlite:D:/");
         mDatabase.startDatabase();
     }
 
