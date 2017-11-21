@@ -11,8 +11,8 @@ public class MyDatabase {
             "password TEXT);";
     private final static String startFilesTable = "CREATE TABLE IF NOT EXISTS files (" +
             "id INTEGER PRIMARY KEY,"+
-            "file TEXT,"+
-            "owner TEXT);";
+            "name TEXT,"+
+            "length INTEGER);";
 
     public void connect(String path){
         try{
@@ -25,15 +25,25 @@ public class MyDatabase {
         }
     }
 
-    public void startDatabase(){
-        if(connection!=null){
-            try{
-                Statement statement=connection.createStatement();
-                statement.execute(startClientsTable);
-                statement.execute(startFilesTable);
+    public void startDatabase(int flag){
+        if(flag==0) {
+            if (connection != null) {
+                try {
+                    Statement statement = connection.createStatement();
+                    statement.execute(startClientsTable);
+                } catch (SQLException e) {
+                    System.err.println("Cannot start database");
+                }
             }
-            catch (SQLException e){
-                System.err.println("Cannot start database");
+        }
+        else if(flag==1){
+            if (connection != null) {
+                try {
+                    Statement statement = connection.createStatement();
+                    statement.execute(startFilesTable);
+                } catch (SQLException e) {
+                    System.err.println("Cannot start database");
+                }
             }
         }
     }
@@ -46,6 +56,19 @@ public class MyDatabase {
         catch (SQLException e){
             System.err.println("Cannot find data");
             return null;
+        }
+    }
+
+    public void newFile(String name,int length){
+        String sql="INSERT INTO files(name,length) VALUES(?,?)";
+        try{
+            PreparedStatement statement=connection.prepareStatement(sql);
+            statement.setString(1,name);
+            statement.setInt(2,length);
+            statement.executeUpdate();
+        }
+        catch (SQLException e){
+            System.err.println(e);
         }
     }
 

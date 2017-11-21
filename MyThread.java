@@ -27,6 +27,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
     private int transferPort;
     ServerSocket transferSocket = null;
     private MyDatabase mDatabase;
+    private MyDatabase mLocalDatabase;
     private String userNameActive;
     private String Path;
     private boolean loggedIn=false;
@@ -39,7 +40,13 @@ public class MyThread /*extends JFrame*/ implements Runnable {
     private void connectToDatabase(){
         mDatabase=new MyDatabase();
         mDatabase.connect("jdbc:sqlite:D:/");
-        mDatabase.startDatabase();
+        mDatabase.startDatabase(0);
+    }
+
+    private void connectToLocalDatabase(String url){
+        mLocalDatabase=new MyDatabase();
+        mLocalDatabase.connect(url);
+        mLocalDatabase.startDatabase(1);
     }
 
     public MyThread(int port){
@@ -133,6 +140,19 @@ public class MyThread /*extends JFrame*/ implements Runnable {
         }
     }
 
+    public String getFileName(String filePath){
+        char tmp;
+        int i = 0;
+        String fileName_tmp="";
+        int file_src_length = filePath.length();
+        while((tmp = filePath.charAt(file_src_length-1-i))!='\\') {
+            fileName_tmp += tmp;
+            i++;
+        }
+        StringBuilder builder=new StringBuilder(fileName_tmp);
+        return builder.reverse().toString();
+    }
+
 
     @Override
     public void run() {
@@ -164,6 +184,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                         }
                         else
                             out.println(MyProtocol.NOSUCHFILE);
+                        connectToLocalDatabase("jdbc:sqlite:D:/BackuperKopie/"+userNameActive+"/"+userNameActive+"_");
                     }
                 }
                 else if(request.equals(MyProtocol.SENDFILE)){
@@ -199,6 +220,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                                 offset += read;
                                 //progressBar.setValue(offset);
                             }
+                            mLocalDatabase.newFile(getFileName(filePath),fileLength);
                             System.out.println("Wczytano bajtów: " + offset + "/" + fileLength);
                             File fileOut = new File(filePath);
                             FileOutputStream outputLocal = new FileOutputStream(fileOut);
@@ -206,6 +228,10 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                             outputLocal.flush();
                             out.println(MyProtocol.READY);
                             System.out.println(MyProtocol.READY);
+                        }
+                        ResultSet resultSet=mLocalDatabase.selectViaSQL("SELECT name,length FROM files;");
+                        while(resultSet.next()){
+                            System.out.println(resultSet.getString(1)+": "+resultSet.getInt(2));
                         }
                     }
                     catch (IOException e){
