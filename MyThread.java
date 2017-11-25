@@ -265,7 +265,9 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                                 }
                             }
                             filesNames.add(fileNm);
-                            save.println(fileNm);
+                            String [] separated=separateNameFromExtension(fileNm);
+                            String fPath=separated[0]+"_v"+version+"."+separated[1];
+                            save.println(fPath);
                             filesData.add(new FileMetaData(version,filePth,Path + "\\" + fileNm, fileLngth));
                         }
                         for (String fileTitle:filesTitles
