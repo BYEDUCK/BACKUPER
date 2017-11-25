@@ -36,6 +36,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
     private Vector <String> filesNames = new Vector<>();
     private List<String> filesTitles = new ArrayList<>();
     private PrintWriter save;
+    private OutputStream outputStream;
 
     private void connectToDatabase(){
         mDatabase=new MyDatabase();
@@ -93,6 +94,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
             //add(progressBar);
             //setVisible(false);
             inputStream = socket.getInputStream();
+            outputStream = socket.getOutputStream();
             bufferedInputStream=new BufferedInputStream(inputStream);
             bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out=new PrintWriter(socket.getOutputStream(),true);
@@ -151,6 +153,27 @@ public class MyThread /*extends JFrame*/ implements Runnable {
         }
         StringBuilder builder=new StringBuilder(fileName_tmp);
         return builder.reverse().toString();
+    }
+
+    public void restoreFiles (OutputStream outputStream) {
+        try {
+            String fileName = receive();
+            System.out.println(fileName);
+            //ResultSet check = mDatabase.selectViaSQL("SELECT password FROM files WHERE name='" + fileName + "';");  Tu się coś jebie przy przy odzyskiwaniu w bazie danych
+            //System.out.println(check);
+            File fileToRestore = new File(Path + "\\" + fileName);
+            FileInputStream fis = new FileInputStream(fileToRestore);
+            System.out.println(fileToRestore.getPath());
+            System.out.println(MyProtocol.READY);
+            int fileLength = (int) fileToRestore.length();
+            byte bytesFile[] = new byte[fileLength];
+            fis.read(bytesFile, 0, fileLength);
+            out.println(fileLength);
+            System.out.println(fileLength);
+            outputStream.write(bytesFile, 0, fileLength);
+        } catch (Exception e) {
+            System.out.println("Plik nie został zlokalizowany na serwerze" +e);
+        }
     }
 
 
@@ -220,7 +243,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                                 offset += read;
                                 //progressBar.setValue(offset);
                             }
-                            mLocalDatabase.newFile(getFileName(filePath),fileLength);
+                            mLocalDatabase.newFile(getFileName(filePath),fileLength,filePath);
                             System.out.println("Wczytano bajtów: " + offset + "/" + fileLength);
                             File fileOut = new File(filePath);
                             FileOutputStream outputLocal = new FileOutputStream(fileOut);
@@ -231,13 +254,17 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                         }
                         ResultSet resultSet=mLocalDatabase.selectViaSQL("SELECT name,length FROM files;");
                         while(resultSet.next()){
-                            System.out.println(resultSet.getString(1)+": "+resultSet.getInt(2));
+                            System.out.println(resultSet.getString(1)+": "+resultSet.getInt(2)+": "+resultSet.getString(3));
                         }
                     }
                     catch (IOException e){
                         System.err.println(e);
                         out.println(MyProtocol.FAILED);
                     }
+                }
+                else if (request.equals(MyProtocol.RESTOREFILE)) {
+                    restoreFiles(outputStream);
+
                 }
                 else if(request.equals(MyProtocol.NEWUSER)){
                     String newName=bufferedReader.readLine();

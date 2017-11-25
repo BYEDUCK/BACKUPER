@@ -51,6 +51,7 @@ public class Client extends JFrame implements ActionListener {
     private Vector<String> restoreFiles;
     private int filesNumber;
     private int ignored;
+    private BufferedInputStream bis;
 
     public Client() {
         prepareLogInWindow();
@@ -93,6 +94,7 @@ public class Client extends JFrame implements ActionListener {
             outNotify = new PrintWriter(socket.getOutputStream(), true);
             bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
             outputStream=socket.getOutputStream();
+            bis = new BufferedInputStream(inputStream);
         }
         catch (IOException e){
             System.err.println("Error establishing the connection with server!: "+e);
@@ -115,10 +117,10 @@ public class Client extends JFrame implements ActionListener {
         String fileName=builder.reverse().toString();
         outNotify.println(fileData.getFileLength());
         outNotify.println(fileName);
-        restoreComboBox.addItem(fileName);
+        //restoreComboBox.addItem(fileName);
     }
 
-    private void sendFile(FileMetaData fileData, OutputStream out){
+    public void sendFile(FileMetaData fileData, OutputStream out){
         try {
 
             File file = new File(fileData.getFilePath());
@@ -147,7 +149,7 @@ public class Client extends JFrame implements ActionListener {
                 }
             }
         }else
-        System.out.println(tmp);
+            System.out.println(tmp);
     }
 
 
@@ -239,6 +241,7 @@ public class Client extends JFrame implements ActionListener {
         chooseFileButton.addActionListener(this);
         startBuckupButton.addActionListener(this);
         clearButton.addActionListener(this);
+        restoreButton.addActionListener(this);
         JPanel contentFrame=(JPanel)this.getContentPane();
         contentFrame.setLayout(new GridLayout(12,2));
         contentFrame.add(chooseFileButton);
@@ -319,6 +322,32 @@ public class Client extends JFrame implements ActionListener {
         else if(clicked == clearButton) {
             listModelSent.clear();
             filesSent.clear();
+        }
+        else if (clicked == restoreButton) {
+            String fileTMP = restoreComboBox.getSelectedItem().toString();
+            outNotify.println(MyProtocol.RESTOREFILE);
+            outNotify.println(fileTMP);
+            int fileLength = Integer.parseInt(receive());
+            System.out.println(fileLength);
+            byte[] fileBytes = new byte[fileLength];
+            int offset = 0;
+            int read;
+            System.out.println("fine");
+            try {
+                while (offset < fileLength && (read = bis.read(fileBytes, offset, fileLength - offset)) != -1) {
+                    offset += read;
+                }
+            }catch (IOException ioe) {
+                System.err.println(ioe);
+            } try {
+                System.out.println("Wczytano bajtów: " + offset + "/" + fileLength);
+                File fileOut = new File("D:\\BackuperClient\\" + fileTMP);
+                FileOutputStream outputLocal = new FileOutputStream(fileOut);
+                outputLocal.write(fileBytes, 0, fileLength);
+                outputLocal.flush();
+            } catch (Exception er) {
+                System.err.println("Błąd przywracania pliku: " +er);
+            }
         }
         else if(clicked == logIn)
         {

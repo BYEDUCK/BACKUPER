@@ -12,7 +12,8 @@ public class MyDatabase {
     private final static String startFilesTable = "CREATE TABLE IF NOT EXISTS files (" +
             "id INTEGER PRIMARY KEY,"+
             "name TEXT,"+
-            "length INTEGER);";
+            "length INTEGER,"+
+            "path TEXT);";
 
     public void connect(String path){
         try{
@@ -59,12 +60,13 @@ public class MyDatabase {
         }
     }
 
-    public void newFile(String name,int length){
-        String sql="INSERT INTO files(name,length) VALUES(?,?)";
+    public void newFile(String name,int length, String path){
+        String sql="INSERT INTO files(name,length,path) VALUES(?,?)";
         try{
             PreparedStatement statement=connection.prepareStatement(sql);
             statement.setString(1,name);
             statement.setInt(2,length);
+            statement.setString(3,path);
             statement.executeUpdate();
         }
         catch (SQLException e){
