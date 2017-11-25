@@ -30,6 +30,8 @@ public class MyThread /*extends JFrame*/ implements Runnable {
     private MyDatabase mLocalDatabase;
     private String userNameActive;
     private String Path;
+    private int fileVersion;
+    private String fileName;
     private boolean loggedIn=false;
     private boolean alreadyExists=false;
     private ArrayList<String> users;
@@ -142,7 +144,34 @@ public class MyThread /*extends JFrame*/ implements Runnable {
         }
     }
 
-    public String getFileName(String filePath){
+    private String separateFromVersion(String filePath){
+        StringBuilder builder=new StringBuilder(filePath);
+        int i=filePath.length()-1;
+        while(filePath.charAt(i)!='_'){
+            builder.deleteCharAt(i);
+            i--;
+        }
+        builder.deleteCharAt(i);
+        return builder.toString();
+    }
+
+    private String[] separateNameFromExtension(String fileName){
+        String[] wynik=new String[2];
+        StringBuilder builder=new StringBuilder(fileName);
+        StringBuilder ext=new StringBuilder();
+        int i=fileName.length()-1;
+        while(fileName.charAt(i)!='.'){
+            ext.append(fileName.charAt(i));
+            builder.deleteCharAt(i);
+            i--;
+        }
+        builder.deleteCharAt(i);
+        wynik[0]=builder.toString();
+        wynik[1]=ext.reverse().toString();
+        return wynik;
+    }
+
+    private String getFileName(String filePath){
         char tmp;
         int i = 0;
         String fileName_tmp="";
@@ -155,7 +184,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
         return builder.reverse().toString();
     }
 
-    public void restoreFiles (OutputStream outputStream) {
+    private void restoreFiles (OutputStream outputStream) {
         try {
             String fileName = receive();
             String pathToSave="";
@@ -224,12 +253,24 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                             int fileLngth = Integer.parseInt(bufferedReader.readLine());
                             String filePth = bufferedReader.readLine();
                             String fileNm=getFileName(filePth);
+                            ResultSet set=mLocalDatabase.selectViaSQL("SELECT name, length, version FROM files");
+                            int version=1;
+                            while(set.next()){
+                                String[] separated=separateNameFromExtension(set.getString(1));
+                                String name_cmp=separateFromVersion(separated[0])+"."+separated[1];
+                                int length_cmp=set.getInt(2);
+                                if(fileNm.equals(name_cmp)){
+                                    if(fileLngth!=length_cmp)
+                                        version=set.getInt(3)+1;
+                                }
+                            }
                             filesNames.add(fileNm);
                             save.println(fileNm);
-                            filesData.add(new FileMetaData(filePth,Path + "\\" + fileNm, fileLngth));
+                            filesData.add(new FileMetaData(version,filePth,Path + "\\" + fileNm, fileLngth));
                         }
-                        for(int i = 0;i<filesTitles.size();i++) {
-                            save.println(filesTitles.get(i));
+                        for (String fileTitle:filesTitles
+                             ) {
+                            save.println(fileTitle);
                         }
                         save.close();
                         out.println(MyProtocol.READY);
@@ -237,6 +278,9 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                         for (int i = 0; i < howmany; i++) {
                             fileLength = filesData.get(i).getFileLength();
                             filePath = filesData.get(i).getFilePath();
+                            fileVersion=filesData.get(i).getVersion();
+                            String [] separated=separateNameFromExtension(filePath);
+                            filePath=separated[0]+"_v"+fileVersion+"."+separated[1];
                             String clientPath=filesData.get(i).getClientPath();
                             //progressBar.setMinimum(0);
                             //progressBar.setMaximum(fileLength);
@@ -248,7 +292,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                                 offset += read;
                                 //progressBar.setValue(offset);
                             }
-                            mLocalDatabase.newFile(getFileName(filePath),fileLength,clientPath);
+                            mLocalDatabase.newFile(getFileName(filePath),fileLength,clientPath,fileVersion);
                             System.out.println("Wczytano bajtów: " + offset + "/" + fileLength);
                             File fileOut = new File(filePath);
                             FileOutputStream outputLocal = new FileOutputStream(fileOut);

@@ -13,7 +13,8 @@ public class MyDatabase {
             "id INTEGER PRIMARY KEY,"+
             "name TEXT,"+
             "length INTEGER,"+
-            "path TEXT);";
+            "path TEXT," +
+            "version INTEGER);";
 
     public void connect(String path){
         try{
@@ -60,13 +61,14 @@ public class MyDatabase {
         }
     }
 
-    public void newFile(String name,int length, String path){
-        String sql="INSERT INTO files(name,length,path) VALUES(?,?,?)";
+    public void newFile(String name,int length, String path,int version){
+        String sql="INSERT INTO files(name,length,path,version) VALUES(?,?,?,?)";
         try{
             PreparedStatement statement=connection.prepareStatement(sql);
             statement.setString(1,name);
             statement.setInt(2,length);
             statement.setString(3,path);
+            statement.setInt(4,version);
             statement.executeUpdate();
         }
         catch (SQLException e){
