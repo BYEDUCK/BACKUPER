@@ -102,22 +102,24 @@ public class Client extends JFrame implements ActionListener {
     }
 
 
-
-    private void sendMetaData(FileMetaData fileData){
+    public String getFileName(String filePath){
         char tmp;
         int i = 0;
         String fileName_tmp="";
-        String filePth = fileData.getFilePath();
-        int file_src_length = filePth.length();
-        while((tmp = filePth.charAt(file_src_length-1-i))!='\\') {
+        int file_src_length = filePath.length();
+        while((tmp = filePath.charAt(file_src_length-1-i))!='\\') {
             fileName_tmp += tmp;
             i++;
         }
         StringBuilder builder=new StringBuilder(fileName_tmp);
-        String fileName=builder.reverse().toString();
+        return builder.reverse().toString();
+    }
+
+    private void sendMetaData(FileMetaData fileData){
+        String filePath=fileData.getFilePath();
         outNotify.println(fileData.getFileLength());
-        outNotify.println(fileName);
-        //restoreComboBox.addItem(fileName);
+        outNotify.println(filePath);
+        restoreComboBox.addItem(getFileName(filePath));
     }
 
     public void sendFile(FileMetaData fileData, OutputStream out){
@@ -328,6 +330,7 @@ public class Client extends JFrame implements ActionListener {
             outNotify.println(MyProtocol.RESTOREFILE);
             outNotify.println(fileTMP);
             int fileLength = Integer.parseInt(receive());
+            String pathToSave=receive();
             System.out.println(fileLength);
             byte[] fileBytes = new byte[fileLength];
             int offset = 0;
@@ -341,7 +344,7 @@ public class Client extends JFrame implements ActionListener {
                 System.err.println(ioe);
             } try {
                 System.out.println("Wczytano bajtów: " + offset + "/" + fileLength);
-                File fileOut = new File("D:\\BackuperClient\\" + fileTMP);
+                File fileOut = new File(pathToSave);
                 FileOutputStream outputLocal = new FileOutputStream(fileOut);
                 outputLocal.write(fileBytes, 0, fileLength);
                 outputLocal.flush();

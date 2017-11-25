@@ -61,7 +61,7 @@ public class MyDatabase {
     }
 
     public void newFile(String name,int length, String path){
-        String sql="INSERT INTO files(name,length,path) VALUES(?,?)";
+        String sql="INSERT INTO files(name,length,path) VALUES(?,?,?)";
         try{
             PreparedStatement statement=connection.prepareStatement(sql);
             statement.setString(1,name);

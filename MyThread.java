@@ -158,9 +158,11 @@ public class MyThread /*extends JFrame*/ implements Runnable {
     public void restoreFiles (OutputStream outputStream) {
         try {
             String fileName = receive();
+            String pathToSave="";
             System.out.println(fileName);
-            //ResultSet check = mDatabase.selectViaSQL("SELECT password FROM files WHERE name='" + fileName + "';");  Tu się coś jebie przy przy odzyskiwaniu w bazie danych
-            //System.out.println(check);
+            ResultSet set=mLocalDatabase.selectViaSQL("SELECT path FROM files WHERE name='"+fileName+"';");
+            if(set.next())
+                pathToSave=set.getString(1);
             File fileToRestore = new File(Path + "\\" + fileName);
             FileInputStream fis = new FileInputStream(fileToRestore);
             System.out.println(fileToRestore.getPath());
@@ -169,6 +171,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
             byte bytesFile[] = new byte[fileLength];
             fis.read(bytesFile, 0, fileLength);
             out.println(fileLength);
+            out.println(pathToSave);
             System.out.println(fileLength);
             outputStream.write(bytesFile, 0, fileLength);
         } catch (Exception e) {
@@ -219,10 +222,11 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                         save = new PrintWriter(Path+"\\"+"container"+userNameActive+".txt");
                         for (int i = 0; i < howmany; i++) {
                             int fileLngth = Integer.parseInt(bufferedReader.readLine());
-                            String fileNm = bufferedReader.readLine();
+                            String filePth = bufferedReader.readLine();
+                            String fileNm=getFileName(filePth);
                             filesNames.add(fileNm);
                             save.println(fileNm);
-                            filesData.add(new FileMetaData(Path + "\\" + fileNm, fileLngth));
+                            filesData.add(new FileMetaData(filePth,Path + "\\" + fileNm, fileLngth));
                         }
                         for(int i = 0;i<filesTitles.size();i++) {
                             save.println(filesTitles.get(i));
@@ -233,6 +237,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                         for (int i = 0; i < howmany; i++) {
                             fileLength = filesData.get(i).getFileLength();
                             filePath = filesData.get(i).getFilePath();
+                            String clientPath=filesData.get(i).getClientPath();
                             //progressBar.setMinimum(0);
                             //progressBar.setMaximum(fileLength);
                             //progressBar.setValue(0);
@@ -243,7 +248,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                                 offset += read;
                                 //progressBar.setValue(offset);
                             }
-                            mLocalDatabase.newFile(getFileName(filePath),fileLength,filePath);
+                            mLocalDatabase.newFile(getFileName(filePath),fileLength,clientPath);
                             System.out.println("Wczytano bajtów: " + offset + "/" + fileLength);
                             File fileOut = new File(filePath);
                             FileOutputStream outputLocal = new FileOutputStream(fileOut);
@@ -252,7 +257,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                             out.println(MyProtocol.READY);
                             System.out.println(MyProtocol.READY);
                         }
-                        ResultSet resultSet=mLocalDatabase.selectViaSQL("SELECT name,length FROM files;");
+                        ResultSet resultSet=mLocalDatabase.selectViaSQL("SELECT name,length,path FROM files;");
                         while(resultSet.next()){
                             System.out.println(resultSet.getString(1)+": "+resultSet.getInt(2)+": "+resultSet.getString(3));
                         }
