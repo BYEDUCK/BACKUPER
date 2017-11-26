@@ -330,7 +330,12 @@ public class Client extends JFrame implements ActionListener {
             String fileTMP = restoreComboBox.getSelectedItem().toString();
             outNotify.println(MyProtocol.RESTOREFILE);
             outNotify.println(fileTMP);
-            int fileLength = Integer.parseInt(receive());
+            int fileLength=0;
+            String rec=receive();
+            if(rec.equals(MyProtocol.READY))
+                fileLength = Integer.parseInt(receive());
+            else
+                fileLength=Integer.parseInt(rec);
             String pathToSave=receive();
             System.out.println(fileLength);
             byte[] fileBytes = new byte[fileLength];

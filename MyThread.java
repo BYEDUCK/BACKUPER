@@ -302,7 +302,8 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                             outputLocal.flush();
                             out.println(MyProtocol.FILEEXIST);
                             sendTitles();
-                            //out.println(MyProtocol.READY);
+                            out.println(MyProtocol.READY);
+                            out.flush();
                             System.out.println(MyProtocol.READY);
                         }
                         ResultSet resultSet=mLocalDatabase.selectViaSQL("SELECT name,length,path FROM files;");
