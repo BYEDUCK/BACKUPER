@@ -119,7 +119,7 @@ public class Client extends JFrame implements ActionListener {
         String filePath=fileData.getFilePath();
         outNotify.println(fileData.getFileLength());
         outNotify.println(filePath);
-        restoreComboBox.addItem(getFileName(filePath));
+        //restoreComboBox.addItem(getFileName(filePath));
     }
 
     public void sendFile(FileMetaData fileData, OutputStream out){
@@ -316,6 +316,7 @@ public class Client extends JFrame implements ActionListener {
                 }
                 que.clear();
                 listModelQue.clear();
+                fillVector();
             }
             catch (IOException e1){
                 System.err.println(e1);

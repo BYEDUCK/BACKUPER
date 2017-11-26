@@ -300,6 +300,8 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                             FileOutputStream outputLocal = new FileOutputStream(fileOut);
                             outputLocal.write(fileBytes, 0, fileLength);
                             outputLocal.flush();
+                            out.println(MyProtocol.FILEEXIST);
+                            sendTitles();
                             out.println(MyProtocol.READY);
                             System.out.println(MyProtocol.READY);
                         }
