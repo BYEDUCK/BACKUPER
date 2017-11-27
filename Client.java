@@ -24,6 +24,8 @@ public class Client extends JFrame implements ActionListener {
     private JComboBox restoreComboBox;
     private JButton createUser;
     private JTextArea userNameArea;
+    private JTextArea IPArea;
+    private JTextArea IPArea_newUser;
     private JPasswordField passwordArea;
     private JTextArea login;
     private JPasswordField password;
@@ -70,9 +72,9 @@ public class Client extends JFrame implements ActionListener {
         }
     }
 
-    private void getAttainablePort() throws IOException {
+    private void getAttainablePort(String IP) throws IOException {
         if(port==-1) {
-            Socket socket = new Socket("localhost", 12129);
+            Socket socket = new Socket(IP, 12129);
             InputStream inputStream = socket.getInputStream();
             BufferedReader portReader = new BufferedReader(new InputStreamReader(inputStream));
             port = Integer.parseInt(portReader.readLine());
@@ -86,10 +88,10 @@ public class Client extends JFrame implements ActionListener {
 
 
 
-    private void setConnection(){
+    private void setConnection(String IP){
         try {
-            getAttainablePort();
-            socket = new Socket("localhost", port);
+            getAttainablePort(IP);
+            socket = new Socket(IP, port);
             InputStream inputStream = socket.getInputStream();
             outNotify = new PrintWriter(socket.getOutputStream(), true);
             bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
@@ -165,7 +167,11 @@ public class Client extends JFrame implements ActionListener {
             }
         });
         JPanel contentFrame=(JPanel)logInFrame.getContentPane();
-        contentFrame.setLayout(new GridLayout(4,1));
+        contentFrame.setLayout(new GridLayout(8,1));
+        JLabel IPAreaText=new JLabel("Adres IP serwera");
+        JLabel loginLabel=new JLabel("Login");
+        JLabel passwordLabel=new JLabel("Hasło");
+        IPArea=new JTextArea();
         login=new JTextArea();
         password=new JPasswordField();
         logIn=new JButton("Zaloguj");
@@ -177,11 +183,15 @@ public class Client extends JFrame implements ActionListener {
         logIn.setBounds(0,0,400,100);
         login.setBorder(BorderFactory.createLineBorder(new Color(000000)));
         password.setBorder(BorderFactory.createLineBorder(new Color(0x000000)));
+        contentFrame.add(loginLabel);
         contentFrame.add(login);
+        contentFrame.add(passwordLabel);
         contentFrame.add(password);
+        contentFrame.add(IPAreaText);
+        contentFrame.add(IPArea);
         contentFrame.add(logIn);
         contentFrame.add(createUser);
-        logInFrame.setSize(new Dimension(400,150));
+        logInFrame.setSize(new Dimension(400,240));
         logInFrame.setLocation(100,100);
         logInFrame.setVisible(true);
         logInFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -197,18 +207,22 @@ public class Client extends JFrame implements ActionListener {
             }
         });
         JPanel contentFrame=(JPanel)newUserFrame.getContentPane();
+        JLabel IPAreaText_newUser=new JLabel("Adres IP serwera");
+        IPArea_newUser=new JTextArea();
         userNameLabel=new JLabel("Nazwa użytkownika");
         userNameArea=new JTextArea();
         passwordLabel=new JLabel("Hasło");
         passwordArea=new JPasswordField();
         newUser=new JButton("Załóż konto");
         newUser.addActionListener(this);
-        contentFrame.setLayout(new GridLayout(5,1));
-        newUserFrame.setSize(new Dimension(300,250));
+        contentFrame.setLayout(new GridLayout(7,1));
+        newUserFrame.setSize(new Dimension(300,280));
         contentFrame.add(userNameLabel);
         contentFrame.add(userNameArea);
         contentFrame.add(passwordLabel);
         contentFrame.add(passwordArea);
+        contentFrame.add(IPAreaText_newUser);
+        contentFrame.add(IPArea_newUser);
         contentFrame.add(newUser);
         newUserFrame.setVisible(true);
     }
@@ -364,8 +378,11 @@ public class Client extends JFrame implements ActionListener {
             try {
                 String loginText = login.getText();
                 String passwordText = password.getText();
+                String IP=IPArea.getText();
+                if(IP.isEmpty())
+                    IP="localhost";
                 if(socket==null) {
-                    setConnection();
+                    setConnection(IP);
                     System.out.println("Ustalono połączenie: " + port);
                 }
                 outNotify.println(MyProtocol.LOGIN);
@@ -404,8 +421,11 @@ public class Client extends JFrame implements ActionListener {
         else if(clicked==newUser){
             String name=userNameArea.getText();
             String password=passwordArea.getText();
+            String IP_newUser=IPArea_newUser.getText();
+            if(IP_newUser.isEmpty())
+                IP_newUser="localhost";
             if(socket==null) {
-                setConnection();
+                setConnection(IP_newUser);
                 System.out.println("Ustalono połączenie: " + port);
             }
             outNotify.println(MyProtocol.NEWUSER);
