@@ -133,6 +133,7 @@ public class Client extends JFrame implements ActionListener {
             FileInputStream inputLocal = new FileInputStream(file);
             byte[] bytesFile = new byte[fileLength];
             inputLocal.read(bytesFile, 0, fileLength);
+            inputLocal.close();
             out.write(bytesFile, 0, fileLength);
         } catch (Exception e){
             System.err.println(e);
