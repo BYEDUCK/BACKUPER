@@ -201,8 +201,10 @@ public class MyThread /*extends JFrame*/ implements Runnable {
             fis.read(bytesFile, 0, fileLength);
             out.println(fileLength);
             out.println(pathToSave);
+            while(!receive().equals(MyProtocol.READY));
             System.out.println(fileLength);
             outputStream.write(bytesFile, 0, fileLength);
+            outputStream.flush();
         } catch (Exception e) {
             System.out.println("Plik nie został zlokalizowany na serwerze" +e);
         }

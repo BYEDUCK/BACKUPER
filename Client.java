@@ -337,6 +337,7 @@ public class Client extends JFrame implements ActionListener {
             else
                 fileLength=Integer.parseInt(rec);
             String pathToSave=receive();
+            outNotify.println(MyProtocol.READY);
             System.out.println(fileLength);
             byte[] fileBytes = new byte[fileLength];
             int offset = 0;
