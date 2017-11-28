@@ -7,6 +7,9 @@ import java.io.*;
 import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Random;
 
 
@@ -22,6 +25,8 @@ public class MyServer extends JFrame implements ActionListener{
     private JButton changePathButton;
     protected static DefaultListModel clientsList;
     private JList usersList;
+    private File pathContainer;
+    public static String PATH;
 
     public MyServer() {
         setSize(500,450);
@@ -45,6 +50,25 @@ public class MyServer extends JFrame implements ActionListener{
         changePathButton.addActionListener(this);
         disconnectButton.addActionListener(this);
         setVisible(true);
+        try {
+            if (Files.notExists(Paths.get("C:\\BackuperKopie")))
+                Files.createDirectory(Paths.get("C:\\BackuperKopie"));
+            if(Files.notExists(Paths.get("C:\\BackuperKopie\\pathContainer.txt")))
+                Files.createFile(Paths.get("C:\\BackuperKopie\\pathContainer.txt"));
+            pathContainer=new File("C:\\BackuperKopie\\pathContainer.txt");
+            FileInputStream pathInput=new FileInputStream(pathContainer);
+            BufferedReader pathReader=new BufferedReader(new InputStreamReader(pathInput));
+            PATH=pathReader.readLine();
+            if(PATH==null)
+                PATH="C:\\BackuperKopie";
+            System.out.println(PATH);
+            pathReader.close();
+            pathInput.close();
+        }
+        catch (IOException e)
+        {
+            System.err.println(e);
+        }
     }
 
 
@@ -112,7 +136,15 @@ public class MyServer extends JFrame implements ActionListener{
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             if(fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
-                MyThread.defaultPath = file.getPath();
+                PATH=file.getPath();
+                try {
+                    PrintWriter pathWriter = new PrintWriter(new FileOutputStream(pathContainer),true);
+                    pathWriter.write(PATH);
+                    pathWriter.close();
+                }
+                catch (IOException e1){
+                    System.err.println(e1);
+                }
                 JOptionPane.showMessageDialog(null, file);
             }
         }

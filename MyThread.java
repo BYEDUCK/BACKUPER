@@ -29,7 +29,6 @@ public class MyThread /*extends JFrame*/ implements Runnable {
     private MyDatabase mDatabase;
     private MyDatabase mLocalDatabase;
     private String userNameActive;
-    protected static String defaultPath = "C:";
     private String Path;
     private int fileVersion;
     private String fileName;
@@ -41,9 +40,17 @@ public class MyThread /*extends JFrame*/ implements Runnable {
     private PrintWriter save;
     private OutputStream outputStream;
 
+
     private void connectToDatabase(){
+        try {
+            if (Files.notExists(Paths.get("D:\\BackuperData")))
+                Files.createDirectory(Paths.get("D:\\BackuperData"));
+        }
+        catch (IOException e){
+            System.err.println(e);
+        }
         mDatabase=new MyDatabase();
-        mDatabase.connect("jdbc:sqlite:D:/");
+        mDatabase.connect("jdbc:sqlite:D:/BackuperData/");
         mDatabase.startDatabase(0);
     }
 
@@ -232,9 +239,9 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                 }
                 if(request.equals(MyProtocol.LOGIN)){
                     if(logIn()){
-                        if(Files.notExists(Paths.get(defaultPath)))
-                            Files.createDirectory(Paths.get(defaultPath));
-                        Path=defaultPath+"\\"+userNameActive;
+                        if(Files.notExists(Paths.get(MyServer.PATH)))
+                            Files.createDirectory(Paths.get(MyServer.PATH));
+                        Path=MyServer.PATH+"\\"+userNameActive;
                         if(Files.notExists(Paths.get(Path)))
                             Files.createDirectory(Paths.get(Path));
                         if(Files.exists(Paths.get(Path + "\\" + "container" + userNameActive + ".txt"))) {
@@ -243,7 +250,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                         }
                         else
                             out.println(MyProtocol.NOSUCHFILE);
-                        connectToLocalDatabase("jdbc:sqlite:D:/BackuperKopie/"+userNameActive+"/"+userNameActive+"_");
+                        connectToLocalDatabase("jdbc:sqlite:D:/BackuperData/"+userNameActive+"_");
                     }
                 }
                 else if(request.equals(MyProtocol.SENDFILE)){
