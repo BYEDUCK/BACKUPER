@@ -14,7 +14,7 @@ import java.util.*;
 
 public class MyThread /*extends JFrame*/ implements Runnable {
 
-    private static Socket socket = null;
+    protected static Socket socket = null;
     private InputStream inputStream;
     private BufferedInputStream bufferedInputStream;
     private PrintWriter out;
@@ -29,6 +29,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
     private MyDatabase mDatabase;
     private MyDatabase mLocalDatabase;
     private String userNameActive;
+    protected static String defaultPath = "C:";
     private String Path;
     private int fileVersion;
     private String fileName;
@@ -73,6 +74,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                 loggedIn = true;
                 System.out.println("Zalogowano!: "+userNameActive);
                 out.println(MyProtocol.LOGGEDIN);
+                MyServer.clientsList.addElement(userNameActive);
                 mDatabase.closeConnection();
                 return true;
             }
@@ -230,9 +232,9 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                 }
                 if(request.equals(MyProtocol.LOGIN)){
                     if(logIn()){
-                        if(Files.notExists(Paths.get("D:\\BackuperKopie")))
-                            Files.createDirectory(Paths.get("D:\\BackuperKopie"));
-                        Path="D:\\BackuperKopie\\"+userNameActive;
+                        if(Files.notExists(Paths.get(defaultPath)))
+                            Files.createDirectory(Paths.get(defaultPath));
+                        Path=defaultPath+"\\"+userNameActive;
                         if(Files.notExists(Paths.get(Path)))
                             Files.createDirectory(Paths.get(Path));
                         if(Files.exists(Paths.get(Path + "\\" + "container" + userNameActive + ".txt"))) {
@@ -339,6 +341,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                 }
                 else if(request.equals(MyProtocol.LOGOUT)){
                     System.out.println("WYLOGOWANO: "+userNameActive);
+                    MyServer.clientsList.removeElement(userNameActive);
                     try {
                         socket.close();
                         transferSocket.close();
