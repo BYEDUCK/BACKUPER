@@ -44,7 +44,7 @@ public class Client extends JFrame implements ActionListener {
     private BufferedReader bufferedReader;
     private OutputStream outputStream;
     private static int curiosity = 0;
-    private Socket socket = null;
+    protected static Socket socket = null;
     private static int port=-1;
     JFrame newUserFrame;
     private boolean loggedIn=false;
@@ -54,10 +54,14 @@ public class Client extends JFrame implements ActionListener {
     private int filesNumber;
     private int ignored;
     private BufferedInputStream bis;
+    private boolean connected = true;
 
     public Client() {
         prepareLogInWindow();
         prepareWindow();
+        /*Runnable runnable = new DogOwner();
+        Thread control = new Thread(runnable);
+        control.start();*/
         que = new ArrayList<>();
         filesSent=new ArrayList<>();
     }
@@ -278,6 +282,7 @@ public class Client extends JFrame implements ActionListener {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                outNotify.println(MyProtocol.LOGOUT);
                 super.windowClosing(e);
                 System.exit(0);
             }
@@ -332,6 +337,8 @@ public class Client extends JFrame implements ActionListener {
                 que.clear();
                 listModelQue.clear();
                 fillVector();
+                if(listModelSent.size() != 0)
+                    JOptionPane.showMessageDialog(null, "Poprawnie przesłano " +listModelSent.size()+ " plików.");
             }
             catch (IOException e1){
                 System.err.println(e1);
@@ -369,6 +376,7 @@ public class Client extends JFrame implements ActionListener {
                 File fileOut = new File(pathToSave);
                 FileOutputStream outputLocal = new FileOutputStream(fileOut);
                 outputLocal.write(fileBytes, 0, fileLength);
+                JOptionPane.showMessageDialog(null, "Poprawnie odtworzona plik: " +fileTMP);
                 outputLocal.flush();
             } catch (Exception er) {
                 System.err.println("Błąd przywracania pliku: " +er);

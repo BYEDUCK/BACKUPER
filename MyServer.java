@@ -117,10 +117,12 @@ public class MyServer extends JFrame implements ActionListener{
             }
         }
         else if (click == disconnectButton) {
+                printWriter.println(MyProtocol.LOGOUT);
                 String TMP = usersList.getSelectedValue().toString();
                 MyServer.clientsList.removeElement(TMP);
-                try {
+                try{
                     MyThread.socket.close();
+                    MyThread.transferSocket.close();
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }

@@ -25,7 +25,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
     private static ArrayList<FileMetaData> filesData;
     //private static JProgressBar progressBar;
     private int transferPort;
-    ServerSocket transferSocket = null;
+    protected static ServerSocket transferSocket = null;
     private MyDatabase mDatabase;
     private MyDatabase mLocalDatabase;
     private String userNameActive;
