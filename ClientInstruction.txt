@@ -1,0 +1,19 @@
+1. Uruchom aplikację.
+2. Jeżeli pierwszy raz uruchomiłeś aplikację - utwórz konto (przycisk "Załóż konto"):
+a) wpisz nazwę użytkownika
+b) wpisz hasło
+c) wpisz adres IP serwera
+3. W przeciwnym przypadku zaloguj się na Swoje konto wpisując poprawny login i hasło oraz adres IP serwera i klikając przycisk "Zaloguj".
+4. Po poprawnym zalogowaniu wyświetli się okno do zdalnego archiwizowania plików.
+5. Wybierz interesujące Cie pliki (przycisk "Wybierz pliki do przesłania").
+6. Następnie wciśnij przycisk "Rozpocznij przesyłanie".
+7. Jeżli wszystko pójdzie zgodnie z planem pliki powinny zostać skopiowane na serwer.
+8. W każdej chwili możesz przywrócić Swoje pliki:
+a) wybierz plik który chcesz przywrócić z rozwijanej listy "Przywróć pliki".
+b) kliknij "Odtwórz plik"
+c) plik zostanie zapisany w swojej oryginalnej lokalizacji.
+9. Gdy zakończysz pracę z programem wciśnij przycisk "LOGOUT".
+
+Dodatkowe informacje:
+Port komunikacji z serwerem: 12129 (po zalogowaniu się ustawiany nowy - losowy).
+W przypadku pozostawienia pola "Adres IP serwera" pustego adres IP zostaje ustawiony na "localhost".

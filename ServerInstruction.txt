@@ -1,0 +1,5 @@
+1. Uruchom aplikacje.
+2. Jeżeli konieczne, zmień scieżkę gdzie będą pobierane pliki przyciskiem "Zmień ścieżkę" (domyślna ścieżka: C:\BackuperKopie).
+3. Czekaj na połączenie klientów.
+4. Jeżli chcesz rozłączyć konkretnego klienta, wybierz go z listy i kliknij "Rozłącz".
+5. W przypadku gdy wyłączysz aplikacje, wszyscy klienci zostaną rozłączeni.

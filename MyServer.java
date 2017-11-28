@@ -27,6 +27,7 @@ public class MyServer extends JFrame implements ActionListener{
     private JList usersList;
     private File pathContainer;
     public static String PATH;
+    private static String pathData="D:\\BackuperData";
 
     public MyServer() {
         setSize(500,450);
@@ -51,11 +52,11 @@ public class MyServer extends JFrame implements ActionListener{
         disconnectButton.addActionListener(this);
         setVisible(true);
         try {
-            if (Files.notExists(Paths.get("C:\\BackuperKopie")))
-                Files.createDirectory(Paths.get("C:\\BackuperKopie"));
-            if(Files.notExists(Paths.get("C:\\BackuperKopie\\pathContainer.txt")))
-                Files.createFile(Paths.get("C:\\BackuperKopie\\pathContainer.txt"));
-            pathContainer=new File("C:\\BackuperKopie\\pathContainer.txt");
+            if (Files.notExists(Paths.get(pathData)))
+                Files.createDirectory(Paths.get(pathData));
+            if(Files.notExists(Paths.get(pathData+"\\pathContainer.txt")))
+                Files.createFile(Paths.get(pathData+"\\pathContainer.txt"));
+            pathContainer=new File(pathData+"\\pathContainer.txt");
             FileInputStream pathInput=new FileInputStream(pathContainer);
             BufferedReader pathReader=new BufferedReader(new InputStreamReader(pathInput));
             PATH=pathReader.readLine();
