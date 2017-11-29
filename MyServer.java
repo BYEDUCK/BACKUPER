@@ -28,6 +28,7 @@ public class MyServer extends JFrame implements ActionListener{
     private File pathContainer;
     public static String PATH;
     private static String pathData="D:\\BackuperData";
+    static Thread transferThread;
 
     public MyServer() {
         setSize(500,450);
@@ -95,7 +96,7 @@ public class MyServer extends JFrame implements ActionListener{
                     printWriter.println(transferPort);
                     setterSocket.close();
                     Runnable runnable = new MyThread(transferPort);
-                    Thread transferThread = new Thread(runnable);
+                    transferThread = new Thread(runnable);
                     transferThread.start();
                 } catch (Exception e) {
                     System.out.println("Creating meta socket problem: " + e);

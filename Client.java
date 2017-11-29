@@ -59,9 +59,6 @@ public class Client extends JFrame implements ActionListener {
     public Client() {
         prepareLogInWindow();
         prepareWindow();
-        /*Runnable runnable = new DogOwner();
-        Thread control = new Thread(runnable);
-        control.start();*/
         que = new ArrayList<>();
         filesSent=new ArrayList<>();
     }
@@ -140,6 +137,7 @@ public class Client extends JFrame implements ActionListener {
             inputLocal.close();
             out.write(bytesFile, 0, fileLength);
         } catch (Exception e){
+            JOptionPane.showMessageDialog(null,"Utracono połączenie, włącz aplikację ponownie.");
             System.err.println(e);
         }
     }
@@ -152,6 +150,7 @@ public class Client extends JFrame implements ActionListener {
             int amount = Integer.parseInt(receive());
             System.out.println(amount);
             System.out.println(tmp);
+            outNotify.println(MyProtocol.READY);
             if (amount != 0) {
                 for (int i = 0; i < amount; i++) {
                     restoreComboBox.addItem(receive());
@@ -370,6 +369,7 @@ public class Client extends JFrame implements ActionListener {
                     offset += read;
                 }
             }catch (IOException ioe) {
+                JOptionPane.showMessageDialog(null, "Utracono połączenie, włącz ponownie aplikację.");
                 System.err.println(ioe);
             } try {
                 System.out.println("Wczytano bajtów: " + offset + "/" + fileLength);
@@ -472,5 +472,4 @@ public class Client extends JFrame implements ActionListener {
             password.setText("");
         }
     }
-
 }
