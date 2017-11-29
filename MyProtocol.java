@@ -12,4 +12,5 @@ public class MyProtocol {
     public final static String FILEEXIST = "FileExist";
     public final static String READY="ready";
     public final static String RESTOREFILE="restoreFile";
+    public final static String DONE="done";
 }

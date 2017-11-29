@@ -327,18 +327,18 @@ public class Client extends JFrame implements ActionListener {
                 for (FileMetaData data:que) {
                     while(!(receive().equals(MyProtocol.READY))){
                         curiosity++;
-                        System.out.println("WAITING..");//ani razu nie wypisuje WAITING a dziala :D
+                        System.out.println("WAITING..");
                     }
-                    sendFile(data,outputStream);
+                    sendFile(data, outputStream);
                     outputStream.flush();
                     filesSent.add(data);
                     listModelSent.addElement(data.getFilePath());
                 }
-                que.clear();
                 listModelQue.clear();
                 fillVector();
                 if(listModelSent.size() != 0)
-                    JOptionPane.showMessageDialog(null, "Poprawnie przesłano " +listModelSent.size()+ " plików.");
+                    JOptionPane.showMessageDialog(null, "Poprawnie przesłano " +que.size()+ " plików.");
+                que.clear();
             }
             catch (IOException e1){
                 System.err.println(e1);
