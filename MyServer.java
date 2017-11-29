@@ -156,7 +156,7 @@ public class MyServer extends JFrame implements ActionListener{
                 MyServer.clientsList.removeElement(TMP);
                 try{
                     MyThread.socket.close();
-                    MyThread.transferSocket.close();
+                    //MyThread.transferSocket.close();
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }

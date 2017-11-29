@@ -44,7 +44,7 @@ public class Client extends JFrame implements ActionListener {
     private BufferedReader bufferedReader;
     private OutputStream outputStream;
     private static int curiosity = 0;
-    protected static Socket socket = null;
+    Socket socket = null;
     private static int port=-1;
     JFrame newUserFrame;
     private boolean loggedIn=false;
@@ -55,6 +55,8 @@ public class Client extends JFrame implements ActionListener {
     private int ignored;
     private BufferedInputStream bis;
     private boolean connected = true;
+    public static JProgressBar progressBar;
+    private static JFrame busyFrame;
 
     public Client() {
         prepareLogInWindow();
@@ -86,7 +88,6 @@ public class Client extends JFrame implements ActionListener {
             System.out.println("Poprzednio ustawiony port: "+port);
         }
     }
-
 
 
     private void setConnection(String IP){
@@ -135,6 +136,7 @@ public class Client extends JFrame implements ActionListener {
             byte[] bytesFile = new byte[fileLength];
             inputLocal.read(bytesFile, 0, fileLength);
             inputLocal.close();
+            while(!receive().equals(MyProtocol.READY));
             out.write(bytesFile, 0, fileLength);
         } catch (Exception e){
             JOptionPane.showMessageDialog(null,"Utracono połączenie, włącz aplikację ponownie.");
@@ -150,7 +152,7 @@ public class Client extends JFrame implements ActionListener {
             int amount = Integer.parseInt(receive());
             System.out.println(amount);
             System.out.println(tmp);
-            outNotify.println(MyProtocol.READY);
+            //outNotify.println(MyProtocol.DONE);
             if (amount != 0) {
                 for (int i = 0; i < amount; i++) {
                     restoreComboBox.addItem(receive());
@@ -289,6 +291,18 @@ public class Client extends JFrame implements ActionListener {
         setVisible(false);
     }
 
+    private void prepareBusyFrame() {
+        busyFrame = new JFrame();
+        busyFrame.setLayout(new GridBagLayout());
+        //JPanel contentFrame=(JPanel)busyFrame.getContentPane();
+        busyFrame.setTitle("Proszę czekać");
+        JLabel busyLabel = new JLabel("Trwa przesyłanie plików");
+        busyFrame.setBounds(500,500,500,50);
+        busyLabel.setBounds(100,50,200,50);
+        busyFrame.add(busyLabel);
+        busyFrame.setVisible(true);
+    }
+
     private String receive(){
         try{
             return bufferedReader.readLine();
@@ -317,6 +331,8 @@ public class Client extends JFrame implements ActionListener {
         }
         else if(clicked == startBuckupButton) {
             try {
+                prepareBusyFrame();
+                busyFrame.setVisible(true);
                 outNotify.println(MyProtocol.SENDFILE);
                 outNotify.println(que.size());
                 for (FileMetaData data : que) {
@@ -333,11 +349,12 @@ public class Client extends JFrame implements ActionListener {
                     filesSent.add(data);
                     listModelSent.addElement(data.getFilePath());
                 }
-                que.clear();
                 listModelQue.clear();
                 fillVector();
                 if(listModelSent.size() != 0)
-                    JOptionPane.showMessageDialog(null, "Poprawnie przesłano " +listModelSent.size()+ " plików.");
+                    JOptionPane.showMessageDialog(null, "Poprawnie przesłano " +que.size()+ " plików.");
+                busyFrame.setVisible(false);
+                que.clear();
             }
             catch (IOException e1){
                 System.err.println(e1);
@@ -348,6 +365,8 @@ public class Client extends JFrame implements ActionListener {
             filesSent.clear();
         }
         else if (clicked == restoreButton) {
+            prepareBusyFrame();
+            busyFrame.setVisible(true);
             String fileTMP = restoreComboBox.getSelectedItem().toString();
             outNotify.println(MyProtocol.RESTOREFILE);
             outNotify.println(fileTMP);
@@ -377,6 +396,7 @@ public class Client extends JFrame implements ActionListener {
                 FileOutputStream outputLocal = new FileOutputStream(fileOut);
                 outputLocal.write(fileBytes, 0, fileLength);
                 JOptionPane.showMessageDialog(null, "Poprawnie odtworzona plik: " +fileTMP);
+                busyFrame.setVisible(false);
                 outputLocal.flush();
             } catch (Exception er) {
                 System.err.println("Błąd przywracania pliku: " +er);

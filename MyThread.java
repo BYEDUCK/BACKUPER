@@ -142,7 +142,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
             filesTitles = Files.readAllLines(path);
             out.println(filesTitles.size());
             System.out.println(filesTitles.size());
-            while(!receive().equals(MyProtocol.READY));
+            //while(!receive().equals(MyProtocol.DONE));
             for (int i = 0; i < filesTitles.size(); i++) {
                 out.println(filesTitles.get(i));
                 System.out.println(filesTitles.get(i));
@@ -302,6 +302,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                             byte[] fileBytes = new byte[fileLength];
                             int offset = 0;
                             int read;
+                            out.println(MyProtocol.READY);
                             while (offset < fileLength && (read = bufferedInputStream.read(fileBytes, offset, fileLength - offset)) != -1) {
                                 offset += read;
                                 //progressBar.setValue(offset);
