@@ -142,6 +142,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
             filesTitles = Files.readAllLines(path);
             out.println(filesTitles.size());
             System.out.println(filesTitles.size());
+            while(!receive().equals(MyProtocol.READY));
             for (int i = 0; i < filesTitles.size(); i++) {
                 out.println(filesTitles.get(i));
                 System.out.println(filesTitles.get(i));
