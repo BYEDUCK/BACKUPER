@@ -27,7 +27,7 @@ public class MyServer extends JFrame implements ActionListener{
     private JList usersList;
     private File pathContainer;
     public static String PATH;
-    private static String pathData="D:\\BackuperData";
+    private static String pathData="E:\\BackuperData";
     static Thread transferThread;
 
     public MyServer() {
@@ -156,7 +156,7 @@ public class MyServer extends JFrame implements ActionListener{
                 MyServer.clientsList.removeElement(TMP);
                 try{
                     MyThread.socket.close();
-                    MyThread.transferSocket.close();
+                    //MyThread.transferSocket.close();
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }

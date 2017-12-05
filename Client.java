@@ -44,7 +44,7 @@ public class Client extends JFrame implements ActionListener {
     private BufferedReader bufferedReader;
     private OutputStream outputStream;
     private static int curiosity = 0;
-    protected static Socket socket = null;
+    Socket socket = null;
     private static int port=-1;
     JFrame newUserFrame;
     private boolean loggedIn=false;
@@ -55,6 +55,9 @@ public class Client extends JFrame implements ActionListener {
     private int ignored;
     private BufferedInputStream bis;
     private boolean connected = true;
+    public static JProgressBar progressBar;
+    private static JFrame busyFrame;
+    private final static int bufferSize=16384;
 
     public Client() {
         prepareLogInWindow();
@@ -86,7 +89,6 @@ public class Client extends JFrame implements ActionListener {
             System.out.println("Poprzednio ustawiony port: "+port);
         }
     }
-
 
 
     private void setConnection(String IP){
@@ -132,10 +134,32 @@ public class Client extends JFrame implements ActionListener {
 
             int fileLength = fileData.getFileLength();
             FileInputStream inputLocal = new FileInputStream(file);
-            byte[] bytesFile = new byte[fileLength];
+            int numbOfPacks=fileLength/bufferSize;
+            if(fileLength%bufferSize!=0)
+                numbOfPacks++;
+            int read=0;
+            int offset=0;
+            int off=0;
+            while(!receive().equals(MyProtocol.READY));
+            System.out.println("Zaczynam przesyłanie pliku: "+fileData.getFilePath());
+            while (offset < fileLength) {
+                byte[] buffer = new byte[bufferSize];
+                while(off<bufferSize && ((read =inputLocal.read(buffer, off, bufferSize - off)) != -1)) {
+                    off+=read;
+                }
+                out.write(buffer, 0, off);
+                out.flush();
+                offset+=off;
+                System.out.println("Wczytano "+off+" bajtów do bufora");
+                off=0;
+            }
+            out.flush();
+            System.out.println("Wysłano "+offset+" bajtów");
+            /*byte[] bytesFile = new byte[fileLength];
             inputLocal.read(bytesFile, 0, fileLength);
             inputLocal.close();
-            out.write(bytesFile, 0, fileLength);
+            while(!receive().equals(MyProtocol.READY));
+            out.write(bytesFile, 0, fileLength);*/
         } catch (Exception e){
             JOptionPane.showMessageDialog(null,"Utracono połączenie, włącz aplikację ponownie.");
             System.err.println(e);
@@ -150,7 +174,7 @@ public class Client extends JFrame implements ActionListener {
             int amount = Integer.parseInt(receive());
             System.out.println(amount);
             System.out.println(tmp);
-            outNotify.println(MyProtocol.READY);
+            //outNotify.println(MyProtocol.DONE);
             if (amount != 0) {
                 for (int i = 0; i < amount; i++) {
                     restoreComboBox.addItem(receive());
@@ -289,6 +313,18 @@ public class Client extends JFrame implements ActionListener {
         setVisible(false);
     }
 
+    private void prepareBusyFrame() {
+        busyFrame = new JFrame();
+        busyFrame.setLayout(new GridBagLayout());
+        //JPanel contentFrame=(JPanel)busyFrame.getContentPane();
+        busyFrame.setTitle("Proszę czekać");
+        JLabel busyLabel = new JLabel("Trwa przesyłanie plików");
+        busyFrame.setBounds(500,500,500,50);
+        busyLabel.setBounds(100,50,200,50);
+        busyFrame.add(busyLabel);
+        busyFrame.setVisible(true);
+    }
+
     private String receive(){
         try{
             return bufferedReader.readLine();
@@ -317,6 +353,8 @@ public class Client extends JFrame implements ActionListener {
         }
         else if(clicked == startBuckupButton) {
             try {
+                prepareBusyFrame();
+                busyFrame.setVisible(true);
                 outNotify.println(MyProtocol.SENDFILE);
                 outNotify.println(que.size());
                 for (FileMetaData data : que) {
@@ -326,9 +364,9 @@ public class Client extends JFrame implements ActionListener {
                 for (FileMetaData data:que) {
                     while(!(receive().equals(MyProtocol.READY))){
                         curiosity++;
-                        System.out.println("WAITING..");
+                        System.out.println("WAITING..");//ani razu nie wypisuje WAITING a dziala :D
                     }
-                    sendFile(data, outputStream);
+                    sendFile(data,outputStream);
                     outputStream.flush();
                     filesSent.add(data);
                     listModelSent.addElement(data.getFilePath());
@@ -337,6 +375,7 @@ public class Client extends JFrame implements ActionListener {
                 fillVector();
                 if(listModelSent.size() != 0)
                     JOptionPane.showMessageDialog(null, "Poprawnie przesłano " +que.size()+ " plików.");
+                busyFrame.setVisible(false);
                 que.clear();
             }
             catch (IOException e1){
@@ -348,6 +387,8 @@ public class Client extends JFrame implements ActionListener {
             filesSent.clear();
         }
         else if (clicked == restoreButton) {
+            prepareBusyFrame();
+            busyFrame.setVisible(true);
             String fileTMP = restoreComboBox.getSelectedItem().toString();
             outNotify.println(MyProtocol.RESTOREFILE);
             outNotify.println(fileTMP);
@@ -377,6 +418,7 @@ public class Client extends JFrame implements ActionListener {
                 FileOutputStream outputLocal = new FileOutputStream(fileOut);
                 outputLocal.write(fileBytes, 0, fileLength);
                 JOptionPane.showMessageDialog(null, "Poprawnie odtworzona plik: " +fileTMP);
+                busyFrame.setVisible(false);
                 outputLocal.flush();
             } catch (Exception er) {
                 System.err.println("Błąd przywracania pliku: " +er);

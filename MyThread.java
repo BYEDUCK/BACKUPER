@@ -39,18 +39,19 @@ public class MyThread /*extends JFrame*/ implements Runnable {
     private List<String> filesTitles = new ArrayList<>();
     private PrintWriter save;
     private OutputStream outputStream;
+    private final static int bufferSize=16384;
 
 
     private void connectToDatabase(){
         try {
-            if (Files.notExists(Paths.get("D:\\BackuperData")))
-                Files.createDirectory(Paths.get("D:\\BackuperData"));
+            if (Files.notExists(Paths.get("E:\\BackuperData")))
+                Files.createDirectory(Paths.get("E:\\BackuperData"));
         }
         catch (IOException e){
             System.err.println(e);
         }
         mDatabase=new MyDatabase();
-        mDatabase.connect("jdbc:sqlite:D:/BackuperData/");
+        mDatabase.connect("jdbc:sqlite:E:/BackuperData/");
         mDatabase.startDatabase(0);
     }
 
@@ -142,7 +143,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
             filesTitles = Files.readAllLines(path);
             out.println(filesTitles.size());
             System.out.println(filesTitles.size());
-            while(!receive().equals(MyProtocol.READY));
+            //while(!receive().equals(MyProtocol.DONE));
             for (int i = 0; i < filesTitles.size(); i++) {
                 out.println(filesTitles.get(i));
                 System.out.println(filesTitles.get(i));
@@ -251,7 +252,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                         }
                         else
                             out.println(MyProtocol.NOSUCHFILE);
-                        connectToLocalDatabase("jdbc:sqlite:D:/BackuperData/"+userNameActive+"_");
+                        connectToLocalDatabase("jdbc:sqlite:E:/BackuperData/"+userNameActive+"_");
                     }
                 }
                 else if(request.equals(MyProtocol.SENDFILE)){
@@ -299,19 +300,39 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                             //progressBar.setMinimum(0);
                             //progressBar.setMaximum(fileLength);
                             //progressBar.setValue(0);
-                            byte[] fileBytes = new byte[fileLength];
-                            int offset = 0;
-                            int read;
-                            while (offset < fileLength && (read = bufferedInputStream.read(fileBytes, offset, fileLength - offset)) != -1) {
-                                offset += read;
-                                //progressBar.setValue(offset);
-                            }
-                            mLocalDatabase.newFile(getFileName(filePath),fileLength,clientPath,fileVersion);
-                            System.out.println("Wczytano bajtów: " + offset + "/" + fileLength);
                             File fileOut = new File(filePath);
                             FileOutputStream outputLocal = new FileOutputStream(fileOut);
-                            outputLocal.write(fileBytes, 0, fileLength);
-                            outputLocal.flush();
+                            //byte[] fileBytes = new byte[fileLength];
+                            int offset = 0;
+                            int off=0;
+                            int read;
+                            int numbOfPacks=fileLength/bufferSize;
+                            int rest=fileLength%bufferSize;
+                            if(rest!=0)
+                                numbOfPacks++;
+                            out.println(MyProtocol.READY);
+                            for(int j=0;j<numbOfPacks-1;j++){
+                                byte[] buffer = new byte[bufferSize];
+                                while(off<bufferSize && ((read =bufferedInputStream.read(buffer, off, bufferSize - off)) != -1)) {
+                                    off+=read;
+                                }
+                                outputLocal.write(buffer, 0, off);
+                                offset+=off;
+                                //System.out.println("Wczytano "+off+" bajtów do bufora");
+                                off=0;
+                            }
+                            byte[] buffer = new byte[rest];
+                            while(off<rest && ((read =bufferedInputStream.read(buffer, off, rest - off)) != -1)) {
+                                off+=read;
+                            }
+                            outputLocal.write(buffer, 0, off);
+                            //System.out.println("Wczytano "+off+" bajtów do bufora");
+                            /*while (offset < fileLength && (read = bufferedInputStream.read(fileBytes, offset, fileLength - offset)) != -1) {
+                                offset += read;
+                                //progressBar.setValue(offset);
+                            }*/
+                            mLocalDatabase.newFile(getFileName(filePath),fileLength,clientPath,fileVersion);
+                            System.out.println("Wczytano bajtów: " + offset + "/" + fileLength);
                             out.println(MyProtocol.FILEEXIST);
                             sendTitles();
                             out.println(MyProtocol.READY);
