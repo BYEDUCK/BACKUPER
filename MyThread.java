@@ -208,14 +208,31 @@ public class MyThread /*extends JFrame*/ implements Runnable {
             System.out.println(fileToRestore.getPath());
             System.out.println(MyProtocol.READY);
             int fileLength = (int) fileToRestore.length();
-            byte bytesFile[] = new byte[fileLength];
-            fis.read(bytesFile, 0, fileLength);
+            /*byte bytesFile[] = new byte[fileLength];
+            fis.read(bytesFile, 0, fileLength);*/
             out.println(fileLength);
             out.println(pathToSave);
+            int read=0;
+            int offset=0;
+            int off=0;
             while(!receive().equals(MyProtocol.READY));
+            while (offset < fileLength) {
+                byte[] buffer = new byte[bufferSize];
+                while(off<bufferSize && ((read =fis.read(buffer, off, bufferSize - off)) != -1)) {
+                    off+=read;
+                }
+                outputStream.write(buffer, 0, off);
+                outputStream.flush();
+                offset+=off;
+                System.out.println("Wczytano "+off+" bajtów do bufora");
+                off=0;
+            }
+            out.flush();
+            System.out.println("Wysłano "+offset+" bajtów");
+
             System.out.println(fileLength);
-            outputStream.write(bytesFile, 0, fileLength);
-            outputStream.flush();
+            //outputStream.write(bytesFile, 0, fileLength);
+            //outputStream.flush();
         } catch (Exception e) {
             System.out.println("Plik nie został zlokalizowany na serwerze" +e);
         }

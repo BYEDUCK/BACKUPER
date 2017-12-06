@@ -134,9 +134,6 @@ public class Client extends JFrame implements ActionListener {
 
             int fileLength = fileData.getFileLength();
             FileInputStream inputLocal = new FileInputStream(file);
-            int numbOfPacks=fileLength/bufferSize;
-            if(fileLength%bufferSize!=0)
-                numbOfPacks++;
             int read=0;
             int offset=0;
             int off=0;
@@ -387,40 +384,56 @@ public class Client extends JFrame implements ActionListener {
             filesSent.clear();
         }
         else if (clicked == restoreButton) {
-            prepareBusyFrame();
-            busyFrame.setVisible(true);
-            String fileTMP = restoreComboBox.getSelectedItem().toString();
-            outNotify.println(MyProtocol.RESTOREFILE);
-            outNotify.println(fileTMP);
-            int fileLength=0;
-            String rec=receive();
-            if(rec.equals(MyProtocol.READY))
-                fileLength = Integer.parseInt(receive());
-            else
-                fileLength=Integer.parseInt(rec);
-            String pathToSave=receive();
-            outNotify.println(MyProtocol.READY);
-            System.out.println(fileLength);
-            byte[] fileBytes = new byte[fileLength];
-            int offset = 0;
-            int read;
-            System.out.println("fine");
             try {
-                while (offset < fileLength && (read = bis.read(fileBytes, offset, fileLength - offset)) != -1) {
-                    offset += read;
-                }
-            }catch (IOException ioe) {
-                JOptionPane.showMessageDialog(null, "Utracono połączenie, włącz ponownie aplikację.");
-                System.err.println(ioe);
-            } try {
-                System.out.println("Wczytano bajtów: " + offset + "/" + fileLength);
+                prepareBusyFrame();
+                busyFrame.setVisible(true);
+                String fileTMP = restoreComboBox.getSelectedItem().toString();
+                outNotify.println(MyProtocol.RESTOREFILE);
+                outNotify.println(fileTMP);
+                int fileLength = 0;
+                String rec = receive();
+                if (rec.equals(MyProtocol.READY))
+                    fileLength = Integer.parseInt(receive());
+                else
+                    fileLength = Integer.parseInt(rec);
+                String pathToSave = receive();
                 File fileOut = new File(pathToSave);
                 FileOutputStream outputLocal = new FileOutputStream(fileOut);
+                outNotify.println(MyProtocol.READY);
+                System.out.println(fileLength);
+                int offset = 0;
+                int off = 0;
+                int read;
+                int numbOfPacks = fileLength / bufferSize;
+                int rest = fileLength % bufferSize;
+                if (rest != 0)
+                    numbOfPacks++;
+                for (int j = 0; j < numbOfPacks - 1; j++) {
+                    byte[] buffer = new byte[bufferSize];
+                    while (off < bufferSize && ((read = bis.read(buffer, off, bufferSize - off)) != -1)) {
+                        off += read;
+                    }
+                    outputLocal.write(buffer, 0, off);
+                    offset += off;
+                    //System.out.println("Wczytano "+off+" bajtów do bufora");
+                    off = 0;
+                }
+                byte[] buffer = new byte[rest];
+                while (off < rest && ((read = bis.read(buffer, off, rest - off)) != -1)) {
+                    off += read;
+                }
+                outputLocal.write(buffer, 0, off);
+                byte[] fileBytes = new byte[fileLength];
+                System.out.println("fine");
+                //System.out.println("Wczytano bajtów: " + offset + "/" + fileLength);
                 outputLocal.write(fileBytes, 0, fileLength);
-                JOptionPane.showMessageDialog(null, "Poprawnie odtworzona plik: " +fileTMP);
+                JOptionPane.showMessageDialog(null, "Poprawnie odtworzona plik: " + fileTMP);
                 busyFrame.setVisible(false);
                 outputLocal.flush();
-            } catch (Exception er) {
+            }
+            catch (IOException er) {
+                JOptionPane.showMessageDialog(null, "Utracono połączenie, włącz ponownie aplikację.");
+                System.err.println(er);
                 System.err.println("Błąd przywracania pliku: " +er);
             }
         }
