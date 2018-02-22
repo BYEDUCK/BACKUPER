@@ -1,29 +1,25 @@
 package BACKUPER;
-
-import javax.swing.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-public class MyThread /*extends JFrame*/ implements Runnable {
+public class MyThread implements Runnable {
 
     protected static Socket socket = null;
     private InputStream inputStream;
     private BufferedInputStream bufferedInputStream;
     private PrintWriter out;
     private BufferedReader bufferedReader;
-    private static int fileLength;
+    private static long fileLength;
     private static String filePath;
-    private static int howmany;
+    private static int howmany;//Amount of files to be sent
     private static ArrayList<FileMetaData> filesData;
-    //private static JProgressBar progressBar;
     private int transferPort;
     protected static ServerSocket transferSocket = null;
     private MyDatabase mDatabase;
@@ -39,7 +35,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
     private List<String> filesTitles = new ArrayList<>();
     private PrintWriter save;
     private OutputStream outputStream;
-    private final static int bufferSize=16384;
+    private final static int bufferSize=16384;//Default buffer-size 16kB
 
 
     private void connectToDatabase(){
@@ -72,12 +68,12 @@ public class MyThread /*extends JFrame*/ implements Runnable {
             userNameActive = bufferedReader.readLine();
             password = bufferedReader.readLine();
             ResultSet check = mDatabase.selectViaSQL("SELECT password FROM clients WHERE login='" + userNameActive + "';");
-            if (check.next())
+            if (check.next())//If user was found download correct password from database
                 passwordCheck = check.getString(1);
             if (!password.equals(passwordCheck)) {
                 System.out.println("Nie udało się zalogować!");
                 out.println(MyProtocol.FAILED);
-                return false;
+                return false;//If given password doesn't match, login unsuccessful
             } else {
                 loggedIn = true;
                 System.out.println("Zalogowano!: "+userNameActive);
@@ -102,9 +98,6 @@ public class MyThread /*extends JFrame*/ implements Runnable {
 
     private void initilize(){
         try {
-            //progressBar=new JProgressBar();
-            //add(progressBar);
-            //setVisible(false);
             inputStream = socket.getInputStream();
             outputStream = socket.getOutputStream();
             bufferedInputStream=new BufferedInputStream(inputStream);
@@ -137,13 +130,12 @@ public class MyThread /*extends JFrame*/ implements Runnable {
             return null;
         }
     }
-    public void sendTitles() {
+    public void sendTitles() {//Send client files that are on the server (written in the container)
         Path path = Paths.get(Path + "\\" + "container" + userNameActive + ".txt");
         try {
             filesTitles = Files.readAllLines(path);
             out.println(filesTitles.size());
             System.out.println(filesTitles.size());
-            //while(!receive().equals(MyProtocol.DONE));
             for (int i = 0; i < filesTitles.size(); i++) {
                 out.println(filesTitles.get(i));
                 System.out.println(filesTitles.get(i));
@@ -155,7 +147,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
         }
     }
 
-    private String separateFromVersion(String filePath){
+    private String separateFromVersion(String filePath){//Deletes version from file-name in order to be comparable
         StringBuilder builder=new StringBuilder(filePath);
         int i=filePath.length()-1;
         while(filePath.charAt(i)!='_'){
@@ -166,7 +158,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
         return builder.toString();
     }
 
-    private String[] separateNameFromExtension(String fileName){
+    private String[] separateNameFromExtension(String fileName){//Deletes extension from file-name in order to be comparable
         String[] wynik=new String[2];
         StringBuilder builder=new StringBuilder(fileName);
         StringBuilder ext=new StringBuilder();
@@ -182,12 +174,12 @@ public class MyThread /*extends JFrame*/ implements Runnable {
         return wynik;
     }
 
-    private String getFileName(String filePath){
+    private String getFileName(String filePath){//Recieves file-name from full path
         char tmp;
         int i = 0;
         String fileName_tmp="";
         int file_src_length = filePath.length();
-        while((tmp = filePath.charAt(file_src_length-1-i))!='\\') {
+        while((tmp = filePath.charAt(file_src_length-1-i))!='\\' || (tmp = filePath.charAt(file_src_length-1-i))!='\\') {
             fileName_tmp += tmp;
             i++;
         }
@@ -207,9 +199,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
             FileInputStream fis = new FileInputStream(fileToRestore);
             System.out.println(fileToRestore.getPath());
             System.out.println(MyProtocol.READY);
-            int fileLength = (int) fileToRestore.length();
-            /*byte bytesFile[] = new byte[fileLength];
-            fis.read(bytesFile, 0, fileLength);*/
+            long fileLength = fileToRestore.length();
             out.println(fileLength);
             out.println(pathToSave);
             int read=0;
@@ -231,8 +221,6 @@ public class MyThread /*extends JFrame*/ implements Runnable {
             System.out.println("Wysłano "+offset+" bajtów");
 
             System.out.println(fileLength);
-            //outputStream.write(bytesFile, 0, fileLength);
-            //outputStream.flush();
         } catch (Exception e) {
             System.out.println("Plik nie został zlokalizowany na serwerze" +e);
         }
@@ -274,13 +262,12 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                 }
                 else if(request.equals(MyProtocol.SENDFILE)){
                     try {
-                        //setVisible(true);
                         filesData = new ArrayList<>();
                         howmany = Integer.parseInt(bufferedReader.readLine());
                         System.out.println("Ilość plików do pobrania: "+howmany);
                         save = new PrintWriter(Path+"\\"+"container"+userNameActive+".txt");
                         for (int i = 0; i < howmany; i++) {
-                            int fileLngth = Integer.parseInt(bufferedReader.readLine());
+                            long fileLngth = Long.parseLong(bufferedReader.readLine());
                             String filePth = bufferedReader.readLine();
                             String fileNm=getFileName(filePth);
                             ResultSet set=mLocalDatabase.selectViaSQL("SELECT name, length, version FROM files");
@@ -288,7 +275,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                             while(set.next()){
                                 String[] separated=separateNameFromExtension(set.getString(1));
                                 String name_cmp=separateFromVersion(separated[0])+"."+separated[1];
-                                int length_cmp=set.getInt(2);
+                                long length_cmp=set.getLong(2);
                                 if(fileNm.equals(name_cmp)){
                                     if(fileLngth!=length_cmp)
                                         version=set.getInt(3)+1;
@@ -301,7 +288,7 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                             filesData.add(new FileMetaData(version,filePth,Path + "\\" + fileNm, fileLngth));
                         }
                         for (String fileTitle:filesTitles
-                             ) {
+                                ) {
                             save.println(fileTitle);
                         }
                         save.close();
@@ -314,17 +301,13 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                             String [] separated=separateNameFromExtension(filePath);
                             filePath=separated[0]+"_v"+fileVersion+"."+separated[1];
                             String clientPath=filesData.get(i).getClientPath();
-                            //progressBar.setMinimum(0);
-                            //progressBar.setMaximum(fileLength);
-                            //progressBar.setValue(0);
                             File fileOut = new File(filePath);
                             FileOutputStream outputLocal = new FileOutputStream(fileOut);
-                            //byte[] fileBytes = new byte[fileLength];
                             int offset = 0;
                             int off=0;
                             int read;
-                            int numbOfPacks=fileLength/bufferSize;
-                            int rest=fileLength%bufferSize;
+                            long numbOfPacks=fileLength/((long)bufferSize);
+                            long rest=fileLength%((long)bufferSize);
                             if(rest!=0)
                                 numbOfPacks++;
                             out.println(MyProtocol.READY);
@@ -335,19 +318,13 @@ public class MyThread /*extends JFrame*/ implements Runnable {
                                 }
                                 outputLocal.write(buffer, 0, off);
                                 offset+=off;
-                                //System.out.println("Wczytano "+off+" bajtów do bufora");
                                 off=0;
                             }
-                            byte[] buffer = new byte[rest];
-                            while(off<rest && ((read =bufferedInputStream.read(buffer, off, rest - off)) != -1)) {
+                            byte[] buffer = new byte[(int)rest];
+                            while(off<rest && ((read =bufferedInputStream.read(buffer, off, (int)(rest - off))) != -1)) {
                                 off+=read;
                             }
                             outputLocal.write(buffer, 0, off);
-                            //System.out.println("Wczytano "+off+" bajtów do bufora");
-                            /*while (offset < fileLength && (read = bufferedInputStream.read(fileBytes, offset, fileLength - offset)) != -1) {
-                                offset += read;
-                                //progressBar.setValue(offset);
-                            }*/
                             mLocalDatabase.newFile(getFileName(filePath),fileLength,clientPath,fileVersion);
                             System.out.println("Wczytano bajtów: " + offset + "/" + fileLength);
                             out.println(MyProtocol.FILEEXIST);

@@ -61,12 +61,12 @@ public class MyDatabase {
         }
     }
 
-    public void newFile(String name,int length, String path,int version){
+    public void newFile(String name,long length, String path,int version){
         String sql="INSERT INTO files(name,length,path,version) VALUES(?,?,?,?)";
         try{
             PreparedStatement statement=connection.prepareStatement(sql);
             statement.setString(1,name);
-            statement.setInt(2,length);
+            statement.setLong(2,length);
             statement.setString(3,path);
             statement.setInt(4,version);
             statement.executeUpdate();

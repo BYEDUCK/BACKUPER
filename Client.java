@@ -124,7 +124,6 @@ public class Client extends JFrame implements ActionListener {
         String filePath=fileData.getFilePath();
         outNotify.println(fileData.getFileLength());
         outNotify.println(filePath);
-        //restoreComboBox.addItem(getFileName(filePath));
     }
 
     public void sendFile(FileMetaData fileData, OutputStream out){
@@ -132,7 +131,7 @@ public class Client extends JFrame implements ActionListener {
 
             File file = new File(fileData.getFilePath());
 
-            int fileLength = fileData.getFileLength();
+            long fileLength = fileData.getFileLength();
             FileInputStream inputLocal = new FileInputStream(file);
             int read=0;
             int offset=0;
@@ -152,11 +151,6 @@ public class Client extends JFrame implements ActionListener {
             }
             out.flush();
             System.out.println("Wysłano "+offset+" bajtów");
-            /*byte[] bytesFile = new byte[fileLength];
-            inputLocal.read(bytesFile, 0, fileLength);
-            inputLocal.close();
-            while(!receive().equals(MyProtocol.READY));
-            out.write(bytesFile, 0, fileLength);*/
         } catch (Exception e){
             JOptionPane.showMessageDialog(null,"Utracono połączenie, włącz aplikację ponownie.");
             System.err.println(e);
@@ -171,7 +165,6 @@ public class Client extends JFrame implements ActionListener {
             int amount = Integer.parseInt(receive());
             System.out.println(amount);
             System.out.println(tmp);
-            //outNotify.println(MyProtocol.DONE);
             if (amount != 0) {
                 for (int i = 0; i < amount; i++) {
                     restoreComboBox.addItem(receive());
@@ -272,7 +265,6 @@ public class Client extends JFrame implements ActionListener {
         restoreLabel = new JLabel("Przywróć pliki:");
         restoreComboBox = new JComboBox();
         restoreButton = new JButton("Odtwórz plik");
-        //chosenNameLabel = new JLabel("Wybrany plik");
         listModelQue = new DefaultListModel();
         fileQue = new JList(listModelQue);
         listModelSent = new DefaultListModel();
@@ -313,7 +305,6 @@ public class Client extends JFrame implements ActionListener {
     private void prepareBusyFrame() {
         busyFrame = new JFrame();
         busyFrame.setLayout(new GridBagLayout());
-        //JPanel contentFrame=(JPanel)busyFrame.getContentPane();
         busyFrame.setTitle("Proszę czekać");
         JLabel busyLabel = new JLabel("Trwa przesyłanie plików");
         busyFrame.setBounds(500,500,500,50);
@@ -341,7 +332,7 @@ public class Client extends JFrame implements ActionListener {
                 File[] chosenFiles = fileChooser.getSelectedFiles();
                 for (File file:chosenFiles) {
                     String name=file.getPath();
-                    int length=(int)file.length();
+                    long length=file.length();
                     listModelQue.addElement(name);
                     que.add(new FileMetaData(name,length));
                     System.out.println("Your choice: "+name);
@@ -361,7 +352,7 @@ public class Client extends JFrame implements ActionListener {
                 for (FileMetaData data:que) {
                     while(!(receive().equals(MyProtocol.READY))){
                         curiosity++;
-                        System.out.println("WAITING..");//ani razu nie wypisuje WAITING a dziala :D
+                        System.out.println("WAITING..");
                     }
                     sendFile(data,outputStream);
                     outputStream.flush();
@@ -390,12 +381,12 @@ public class Client extends JFrame implements ActionListener {
                 String fileTMP = restoreComboBox.getSelectedItem().toString();
                 outNotify.println(MyProtocol.RESTOREFILE);
                 outNotify.println(fileTMP);
-                int fileLength = 0;
+                long fileLength;
                 String rec = receive();
                 if (rec.equals(MyProtocol.READY))
-                    fileLength = Integer.parseInt(receive());
+                    fileLength = Long.parseLong(receive());
                 else
-                    fileLength = Integer.parseInt(rec);
+                    fileLength = Long.parseLong(rec);
                 String pathToSave = receive();
                 File fileOut = new File(pathToSave);
                 FileOutputStream outputLocal = new FileOutputStream(fileOut);
@@ -404,8 +395,8 @@ public class Client extends JFrame implements ActionListener {
                 int offset = 0;
                 int off = 0;
                 int read;
-                int numbOfPacks = fileLength / bufferSize;
-                int rest = fileLength % bufferSize;
+                long numbOfPacks = fileLength / bufferSize;
+                long rest = fileLength % bufferSize;
                 if (rest != 0)
                     numbOfPacks++;
                 for (int j = 0; j < numbOfPacks - 1; j++) {
@@ -415,18 +406,17 @@ public class Client extends JFrame implements ActionListener {
                     }
                     outputLocal.write(buffer, 0, off);
                     offset += off;
-                    //System.out.println("Wczytano "+off+" bajtów do bufora");
                     off = 0;
                 }
-                byte[] buffer = new byte[rest];
-                while (off < rest && ((read = bis.read(buffer, off, rest - off)) != -1)) {
+                byte[] buffer = new byte[(int)rest];
+                while (off < rest && ((read = bis.read(buffer, off, (int)(rest - off))) != -1)) {
                     off += read;
                 }
                 outputLocal.write(buffer, 0, off);
-                byte[] fileBytes = new byte[fileLength];
+                //byte[] fileBytes = new byte[(int)fileLength];
                 System.out.println("fine");
                 //System.out.println("Wczytano bajtów: " + offset + "/" + fileLength);
-                outputLocal.write(fileBytes, 0, fileLength);
+                //outputLocal.write(fileBytes, 0, (int)fileLength);
                 JOptionPane.showMessageDialog(null, "Poprawnie odtworzona plik: " + fileTMP);
                 busyFrame.setVisible(false);
                 outputLocal.flush();
